@@ -730,6 +730,5 @@ Canonical logo assets live in `assets/brand/`.
 - Use `recallbase-logo-lockup.png` or `recallbase-logo-lockup-1024w.png` for brand headers and larger product surfaces.
 - Use `recallbase-wordmark.png` only when the mark is already visible nearby.
 - Extension icon exports are mirrored to `apps/extension/public/icon-*.png`.
-- Web favicon and reusable brand assets are mirrored to `apps/web/public/`.
 
 The primary brand assets are transparent PNG exports from the approved raster logo concept. The toolbar SVG intentionally simplifies the symbol for extreme small-size clarity and is not a replacement for the primary mark.

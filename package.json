@@ -12,21 +12,6 @@
     "apps/*",
     "packages/*"
   ],
-  "files": [
-    "apps",
-    "packages",
-    "scripts",
-    "tests",
-    "docs",
-    "agent",
-    "package.json",
-    "bun.lock",
-    "bunfig.toml",
-    "tsconfig*.json",
-    "DESIGN.md",
-    "README.md",
-    "LICENSE"
-  ],
   "bin": {
     "recallbase": "./apps/cli/src/cli.ts",
     "rb": "./apps/cli/src/cli.ts"
