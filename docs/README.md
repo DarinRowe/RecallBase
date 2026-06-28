@@ -18,4 +18,4 @@ Use this as the first stop for CLI, local database, and agent integration work.
 
 ## Related Project
 
-The browser extension source lives in the sibling `../RecallBase-Extension` project. This project still owns the native host commands used by that extension: `rb extension install-host`, `rb extension verify-host`, and `rb extension-host`.
+The browser extension source lives in a sibling project. This project still owns the native host commands used by that extension: `rb extension install-host`, `rb extension verify-host`, and `rb extension-host`.

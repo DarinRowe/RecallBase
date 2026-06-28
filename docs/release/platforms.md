@@ -24,7 +24,7 @@ bun run scripts/package-npm.ts --targets=host
 tar -tzf .artifacts/release/<test-version>/recallbase-<platform>-<test-version>.tar.gz
 ```
 
-Browser extension packages are released separately from the sibling `../RecallBase-Extension` project. The CLI installation step for extension users is the native-host setup command, not an extension release artifact:
+Browser extension packages are released separately from a sibling project. The CLI installation step for extension users is the native-host setup command, not an extension release artifact:
 
 ```bash
 rb extension install-host

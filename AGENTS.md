@@ -11,7 +11,7 @@ This repository owns the local RecallBase product:
 3. Importers for local AI tool histories and official exports.
 4. Runtime agent skill in `agent/recallbase`.
 
-The browser extension source lives in sibling `../RecallBase-Extension`. This repository still owns the native host commands used by that extension.
+The browser extension source lives in a sibling project. This repository still owns the native host commands used by that extension.
 
 ## Hard Boundaries
 
@@ -37,7 +37,7 @@ The browser extension source lives in sibling `../RecallBase-Extension`. This re
 - Do not introduce heavy abstractions or dependencies for small features.
 - Keep user-facing CLI output useful, not just raw IDs.
 - Preserve privacy and local-first boundaries.
-- When touching native host protocol, verify compatibility with `../RecallBase-Extension`.
+- When touching native host protocol, verify compatibility with the browser extension project.
 
 ## Review Priorities
 

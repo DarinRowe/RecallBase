@@ -174,7 +174,7 @@ RecallBase is **local-first by design**:
 
 ## Browser Extension Setup
 
-The browser extension source and browser packages live in the sibling `../RecallBase-Extension` project. This CLI project owns the local native messaging host used by that extension.
+The browser extension source and browser packages live in a sibling project. This CLI project owns the local native messaging host used by that extension.
 
 ```bash
 # Install the native messaging host (required once)
