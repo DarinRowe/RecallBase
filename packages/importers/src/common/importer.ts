@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { stat } from "node:fs/promises";
+import type { Database } from "bun:sqlite";
 import type { Diagnostic, ImportResult, ImportSourceResult, SourceConfidence, SourceStatus } from "@recallbase/contracts";
 import type { ImportBatchInput } from "@recallbase/core";
 import type { LocalDatabase } from "@recallbase/core";
@@ -74,8 +75,9 @@ export async function importWithRegistry(
 
     const lastImportAt = options.skipUnchanged ? sourceLastImportAt(db, importer.id) : undefined;
     const pathState = options.skipUnchanged ? await sourcePathState(discovery.paths, lastImportAt) : undefined;
+    ensureSourceStateTable(db.db);
     const signature = pathState?.signature;
-    const previousSignature = pathState === undefined ? undefined : db.getSyncState(importSignatureKey(importer.id));
+    const previousSignature = pathState === undefined ? undefined : getSourceState(db.db, importSignatureKey(importer.id));
     if (signature !== undefined && previousSignature === signature) {
       sources.push({
         source: sourceStatusFor(db, importer.id),
@@ -89,7 +91,7 @@ export async function importWithRegistry(
     if (signature !== undefined && previousSignature !== undefined && lastImportAt !== undefined) {
       pathsToImport = pathState!.changedPaths;
       if (pathsToImport.length === 0) {
-        db.setSyncState(importSignatureKey(importer.id), signature);
+        setSourceState(db.db, importSignatureKey(importer.id), signature);
         sources.push({
           source: sourceStatusFor(db, importer.id),
           changedConversations: 0,
@@ -135,7 +137,7 @@ export async function importWithRegistry(
       const result = db.importBatch(withSummarizedDiagnostics(emptyBatch));
       totals.diagnostics += result.diagnostics;
     }
-    if (signature !== undefined) db.setSyncState(importSignatureKey(importer.id), signature);
+    if (signature !== undefined) setSourceState(db.db, importSignatureKey(importer.id), signature);
     sources.push({
       source: sourceStatusFor(db, importer.id),
       changedConversations,
@@ -218,4 +220,27 @@ async function pathEntries(paths: string[]): Promise<Array<{ path: string; exist
     );
   }
   return entries;
+}
+
+function ensureSourceStateTable(db: Database): void {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS source_state (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `);
+}
+
+function getSourceState(db: Database, key: string): string | undefined {
+  return (db.query("SELECT value FROM source_state WHERE key = ?").get(key) as { value: string } | undefined)?.value;
+}
+
+function setSourceState(db: Database, key: string, value: string): void {
+  db.run(
+    `INSERT INTO source_state (key, value, updated_at)
+     VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+    [key, value, new Date().toISOString()]
+  );
 }

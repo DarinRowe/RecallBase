@@ -5,12 +5,9 @@ import { LocalDatabase } from "@recallbase/core";
 import { parseFlags } from "./config";
 import { backupCommand } from "./commands/backup";
 import { importCommand } from "./commands/import";
-import { loginCommand } from "./commands/login";
-import { keyCommand } from "./commands/key";
 import { openCommand } from "./commands/open";
 import { searchCommand } from "./commands/search";
 import { sourcesCommand } from "./commands/sources";
-import { syncCommand, syncStatusCommand } from "./commands/sync";
 import { todayCommand } from "./commands/today";
 import { extensionHostCommand } from "./commands/extension-host";
 import { extensionInstallCommand } from "./commands/extension-install";
@@ -36,14 +33,7 @@ export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = 
   if (command === "help" || command === "--help" || command === "-h") {
     return {
       code: 0,
-      stdout: "RecallBase commands: import, today, search, open, sources, backup, login, key, sync, sync status, extension, extension-host, mcp\n"
-    };
-  }
-  if (command === "login") {
-    const result = await loginCommand({ flags });
-    return {
-      code: result.ok ? 0 : 1,
-      stdout: flags.json ? formatJson(result) : formatHuman(result)
+      stdout: "RecallBase commands: import, today, search, open, sources, backup, extension, extension-host, mcp\n"
     };
   }
 
@@ -93,9 +83,6 @@ async function dispatch(command: string, rest: string[], context: Parameters<typ
   if (command === "open") return openCommand(context, rest);
   if (command === "sources") return sourcesCommand(context);
   if (command === "backup") return backupCommand(context);
-  if (command === "key") return keyCommand(context, rest);
-  if (command === "sync") return syncCommand(context);
-  if (command === "sync-status") return syncStatusCommand(context);
   if (command === "extension" && (rest[0] === "install-host" || rest[0] === "verify-host")) return extensionInstallCommand(context, rest);
   return err("unknown", {
     code: "invalid_arguments",

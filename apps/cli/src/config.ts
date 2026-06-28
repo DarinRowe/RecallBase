@@ -13,10 +13,6 @@ export interface CliFlags {
   limit?: number;
   roots: string[];
   sourceIds: string[];
-  token?: string;
-  syncUrl?: string;
-  authPath: string;
-  deviceKeyPath?: string;
   outPath?: string;
 }
 
@@ -34,12 +30,9 @@ export function parseFlags(args: string[], env: NodeJS.ProcessEnv = process.env)
     noRefresh: false,
     dbPath: defaultDbPath(env),
     dbPathExplicit: false,
-    authPath: env.RECALLBASE_AUTH_PATH ?? "",
     roots,
     sourceIds
   };
-  if (env.RECALLBASE_SYNC_URL !== undefined) flags.syncUrl = env.RECALLBASE_SYNC_URL;
-  if (env.RECALLBASE_DEVICE_KEY_PATH !== undefined) flags.deviceKeyPath = env.RECALLBASE_DEVICE_KEY_PATH;
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index]!;
@@ -63,18 +56,6 @@ export function parseFlags(args: string[], env: NodeJS.ProcessEnv = process.env)
     } else if (arg === "--source" && next) {
       sourceIds.push(next);
       index += 1;
-    } else if (arg === "--token" && next) {
-      flags.token = next;
-      index += 1;
-    } else if (arg === "--sync-url" && next) {
-      flags.syncUrl = next;
-      index += 1;
-    } else if (arg === "--auth-path" && next) {
-      flags.authPath = next;
-      index += 1;
-    } else if (arg === "--device-key-path" && next) {
-      flags.deviceKeyPath = next;
-      index += 1;
     } else if ((arg === "--out" || arg === "-o") && next) {
       flags.outPath = next;
       index += 1;
@@ -84,5 +65,5 @@ export function parseFlags(args: string[], env: NodeJS.ProcessEnv = process.env)
   }
 
   const command = rest[0] ?? "help";
-  return { command: command === "sync" && rest[1] === "status" ? "sync-status" : command, rest: rest.slice(1), flags };
+  return { command, rest: rest.slice(1), flags };
 }

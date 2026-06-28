@@ -5,10 +5,7 @@ import type {
   ResultEnvelope,
   SearchResult,
   SourcesResult,
-  SyncResult,
-  SyncStatusResult,
   TodayResult,
-  DeviceKeyResult,
   ExtensionHostInstallResult
 } from "@recallbase/contracts";
 
@@ -30,17 +27,9 @@ export function formatHuman(result: ResultEnvelope<unknown>): string {
       return formatImport(result.data as ImportResult);
     case "backup":
       return formatBackup(result.data as BackupResult);
-    case "sync":
-      return formatSync(result.data as SyncResult);
-    case "sync-status":
-      return formatSyncStatus(result.data as SyncStatusResult);
     case "extension-install-host":
     case "extension-verify-host":
       return formatExtensionHost(result.data as ExtensionHostInstallResult);
-    case "login":
-      return "Login flow started. Follow the browser prompt or copyable URL.\n";
-    case "key":
-      return formatKey(result.data as DeviceKeyResult);
     default:
       return `${JSON.stringify(result.data, null, 2)}\n`;
   }
@@ -110,19 +99,6 @@ function formatImport(data: ImportResult): string {
     );
   }
   return `${lines.join("\n")}\n`;
-}
-
-function formatSync(data: SyncResult): string {
-  return `Synced ${data.uploadedSearchDocuments} search documents, ${data.uploadedEncryptedConversationChunks} encrypted conversation chunks, and ${data.uploadedEncryptedRawBlobs} encrypted raw blobs. Mode: ${data.mode}.\n`;
-}
-
-function formatKey(data: DeviceKeyResult): string {
-  return `Device key ${data.id} (${data.algorithm} v${data.version}) created ${data.createdAt}${data.path ? `\npath: ${data.path}` : ""}\n`;
-}
-
-function formatSyncStatus(data: SyncStatusResult): string {
-  if (!data.loggedIn) return "Sync: local-only. Run rb login before rb sync.\n";
-  return `Sync: ${data.pendingLocalChanges} pending local changes, last sync ${data.lastSyncAt ?? "never"}.\n`;
 }
 
 function formatExtensionHost(data: ExtensionHostInstallResult): string {

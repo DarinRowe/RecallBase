@@ -8,8 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![macOS · Linux · Windows](https://img.shields.io/badge/platform-macOS%20·%20Linux%20·%20Windows-blue)](#install)
 
-> **Your data stays local.** No account required. Raw transcripts never leave your machine.
-> Cloud sync is opt-in; normalized conversation chunks are encrypted before upload. [Full privacy details →](#privacy)
+> **Your data stays local.** No account required. Raw transcripts never leave your machine. [Full privacy details →](#privacy)
 
 ---
 
@@ -53,7 +52,7 @@ rb sources       # check which sources are healthy
 rb backup        # export everything to JSON
 ```
 
-No login required. Your data never leaves your machine unless you explicitly run `rb sync`.
+No login required. Your data never leaves your machine.
 
 ---
 
@@ -85,12 +84,12 @@ With RecallBase:
 ```
 You: What did I work on today?
 
-Agent: This morning you debugged the OAuth token refresh loop in the Cloudflare
-       Worker — you traced it to a race condition in the Durable Object and left
-       a TODO to add exponential backoff. After lunch, you reviewed the importer
-       contract for Claude Code and added fixture tests for the cursor-based
-       deduplication logic. You ended the day opening a PR for the MCP sync
-       status tool. The exponential backoff TODO is still open.
+Agent: This morning you debugged the OAuth token refresh loop in the edge
+       service — you traced it to a race condition and left a TODO to add
+       exponential backoff. After lunch, you reviewed the importer contract for
+       Claude Code and added fixture tests for the cursor-based deduplication
+       logic. You ended the day opening a PR for the MCP sources tool. The
+       exponential backoff TODO is still open.
 ```
 
 The agent called `rb today --json` in the background. No manual context-setting. No copy-pasting chat logs. Just continuity.
@@ -117,7 +116,7 @@ Add RecallBase as an MCP server to any agent that supports it — Cursor, Claude
 }
 ```
 
-The agent gains five tools: `today`, `search`, `open`, `sources`, and `sync_status`. The MCP server starts in milliseconds, has no external dependencies, and runs entirely locally — no API key, no rate limits.
+The agent gains four tools: `today`, `search`, `open`, and `sources`. The MCP server starts in milliseconds, has no external dependencies, and runs entirely locally — no API key, no rate limits.
 
 ---
 
@@ -144,17 +143,6 @@ The browser extension captures conversations from web AI tools. It can quick-exp
 | :--: | :---------: | :-----------: | :------------------------: | :--------: | :--------------: | :------------: | :---------------: |
 |  ✓   |      ✓      |       ✓       |             ✓              |     ✓      |        ✓         |       ✓        |         ✓         |
 
-### Official Exports
-
-Already have a data export from ChatGPT or Claude? Import it directly — no need to start from scratch:
-
-```bash
-rb import --source chatgpt-export --file ~/Downloads/conversations.json
-rb import --source claude-export  --file ~/Downloads/claude-export.zip
-```
-
----
-
 ## Install
 
 **npm:**
@@ -180,17 +168,7 @@ RecallBase is **local-first by design**:
 
 - All data is stored on your machine in a SQLite database
 - No account required for any local feature
-- Cloud sync is **opt-in only**: run `rb login` then `rb sync` to enable it
-- Normalized conversation chunks are **encrypted before upload**; raw transcripts stay local, and metadata/search indexes are readable
-- `rb login` opens Google OAuth in the browser; `rb login --token <token>` is available for self-hosting
-
-Hosted Web is a read-only sync viewer: search, filters, source status, and synced conversation summaries. Raw transcripts stay local-only.
-
----
-
-## Self-Hosting
-
-RecallBase's sync backend runs on Cloudflare Workers + D1 + R2. See [docs/sync-service/self-hosting.md](docs/sync-service/self-hosting.md).
+- Raw transcripts never leave your machine
 
 ---
 

@@ -1,7 +1,0 @@
-{
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "recallbase-sync-verify",
-  "main": "src/worker/verification-worker.ts",
-  "compatibility_date": "2025-01-01",
-  "workers_dev": true
-}

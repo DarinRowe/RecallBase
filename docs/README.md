@@ -1,17 +1,14 @@
 # RecallBase Docs
 
-Use this as the first stop for CLI, local database, sync service, web viewer, and agent integration work.
+Use this as the first stop for CLI, local database, and agent integration work.
 
 ## Product
 
 - Privacy model: `product/privacy.md`
-- Sync self-hosting: `sync-service/self-hosting.md`
 
 ## Engineering
 
 - CLI entry points: `cli/README.md`
-- Sync service entry points: `sync-service/README.md`
-- Web app entry points: `web/README.md`
 - Release platforms: `release/platforms.md`
 
 ## Agents

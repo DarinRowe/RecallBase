@@ -27,8 +27,7 @@ Guidelines:
 - Use `rb open --json` only for the few conversations needed to understand details behind a `today` or `search` result. Summarize the relevant messages instead of dumping full transcripts.
 - `rb open --json` message objects can include optional `thinking` for platform-visible reasoning blocks and optional lightweight metadata (`modelId`, `upstreamIds`, `attachments`, `citations`, `media`) from browser API captures. Attachment/media URLs are sanitized and may omit token-like query details. Treat `thinking` as separate from `text`; use metadata as context, not as a replacement for message content.
 - Check `rb sources --json` when results seem incomplete.
-- Local RecallBase commands do not require login. Do not run `rb sync` unless the user explicitly asks for sync.
-- Treat synced Web data as bounded metadata/snippets/summaries, not a full local transcript.
+- Local RecallBase commands do not require login or network access.
 - Local CLI imports are message-first. A source can be healthy with `rawEvidence: 0`; use conversations and messages as the primary signal.
 
 When answering users:

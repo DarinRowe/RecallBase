@@ -28,14 +28,8 @@ describe("CLI human output", () => {
   test("empty search validates before query-time refresh", async () => {
     const dbPath = join(mkdtempSync(join(tmpdir(), "rb-empty-search-")), "db.sqlite");
     const result = await runCommand(["search", "--json"], { ...process.env, RECALLBASE_DB: dbPath });
-    const db = new LocalDatabase(dbPath);
-    try {
-      expect(result.code).toBe(1);
-      expect(JSON.parse(result.stdout).error.code).toBe("invalid_arguments");
-      expect(db.getSyncState("cli:auto_refresh:last_import_at")).toBeUndefined();
-    } finally {
-      db.close();
-    }
+    expect(result.code).toBe(1);
+    expect(JSON.parse(result.stdout).error.code).toBe("invalid_arguments");
   });
 
   test("copied Windows native host executable defaults to extension-host mode", () => {

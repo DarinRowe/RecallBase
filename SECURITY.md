@@ -24,6 +24,5 @@ We aim to respond within 7 days and will coordinate a fix and disclosure timelin
 We are especially interested in reports involving:
 
 - Unauthorized access to local imported history
-- Leakage of raw transcripts, raw evidence, or encryption keys to the sync backend
-- Bypass of the explicit-sync boundary
+- Leakage of local raw transcripts or raw evidence off the device
 - Native messaging host protocol vulnerabilities

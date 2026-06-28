@@ -25,8 +25,8 @@ The integration test `tests/integration/agent-access.test.ts` verifies this work
 
 ## When To Avoid RecallBase
 
-Do not use RecallBase as a chat client, notes editor, broad knowledge graph, or autonomous sync trigger. Do not sync unless the user explicitly opts in with login and `rb sync`.
+Do not use RecallBase as a chat client, notes editor, or broad knowledge graph.
 
 ## MCP
 
-`rb mcp` exposes local tools for `today`, `search`, `open`, `sources`, and `sync_status`. Tool responses are JSON envelopes generated from the same query functions as CLI JSON.
+`rb mcp` exposes local tools for `today`, `search`, `open`, and `sources`. Tool responses are JSON envelopes generated from the same query functions as CLI JSON.

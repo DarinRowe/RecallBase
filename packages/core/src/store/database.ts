@@ -9,10 +9,9 @@ import type {
   ConversationRef,
   Diagnostic,
   SearchResultItem,
-  SourceStatus,
-  SyncSearchDocument
+  SourceStatus
 } from "@recallbase/contracts";
-import type { ImportBatchInput, NormalizedConversationInput, NormalizedMessageInput, RawEvidenceInput } from "../domain/conversation";
+import type { ImportBatchInput, NormalizedConversationInput, NormalizedMessageInput, RawEvidenceInput } from "../batch/conversation";
 import { makeSnippet, toFtsQuery } from "../search/search";
 import { localDateString, localDayRangeUtc } from "../time/local-date";
 import { stableId } from "./identity";
@@ -87,7 +86,6 @@ export interface LocalBackup {
   conversations: Array<ConversationDetail & { metadata: Record<string, unknown> }>;
   rawEvidence: RawEvidenceRow[];
   diagnostics: Diagnostic[];
-  syncState: Record<string, string>;
 }
 
 export interface ImportBatchResult {
@@ -450,36 +448,6 @@ export class LocalDatabase {
     };
   }
 
-  syncSearchDocuments(limit = 500): SyncSearchDocument[] {
-    const rows = this.db
-      .query("SELECT * FROM conversations ORDER BY updated_at DESC LIMIT ?")
-      .all(limit) as ConversationRow[];
-    return rows.map((row) => {
-      const message = this.db
-        .query("SELECT text FROM messages WHERE conversation_id = ? ORDER BY created_at, id LIMIT 1")
-        .get(row.id) as { text: string } | undefined;
-      return {
-        id: stableId("doc", [row.id, row.updated_at]),
-        conversationId: row.id,
-        sourceId: row.source_id,
-        title: row.title,
-        updatedAt: row.updated_at,
-        snippet: makeSnippet(message?.text ?? row.title, "", 280)
-      };
-    });
-  }
-
-  syncConversationDetails(limit = 500): ConversationDetail[] {
-    const rows = this.db
-      .query("SELECT id FROM conversations ORDER BY updated_at DESC LIMIT ?")
-      .all(limit) as Array<{ id: string }>;
-    return rows.map((row) => {
-      const conversation = this.open(row.id);
-      if (!conversation || conversation === "ambiguous") throw new Error(`Could not open conversation ${row.id} for sync.`);
-      return conversation;
-    });
-  }
-
   createBackup(exportedAt = new Date().toISOString()): LocalBackup {
     const conversationRows = this.db.query("SELECT * FROM conversations ORDER BY updated_at DESC").all() as Array<
       ConversationRow & { metadata_json: string }
@@ -493,7 +461,6 @@ export class LocalDatabase {
       };
     });
     const rawEvidence = this.db.query("SELECT * FROM raw_evidence ORDER BY created_at, id").all() as RawEvidenceRow[];
-    const syncRows = this.db.query("SELECT key, value FROM sync_state ORDER BY key").all() as Array<{ key: string; value: string }>;
 
     return {
       format: "recallbase.local-backup",
@@ -502,8 +469,7 @@ export class LocalDatabase {
       sources: this.sources(),
       conversations,
       rawEvidence,
-      diagnostics: this.diagnostics(),
-      syncState: Object.fromEntries(syncRows.map((row) => [row.key, row.value]))
+      diagnostics: this.diagnostics()
     };
   }
 
@@ -553,9 +519,7 @@ export class LocalDatabase {
     await this.writeBackupArray(write, "diagnostics", "SELECT * FROM parser_diagnostics ORDER BY created_at DESC", (row) =>
       this.diagnosticFromRow(row as DiagnosticRow)
     );
-    await write(",\n");
-    const syncRows = this.db.query("SELECT key, value FROM sync_state ORDER BY key").all() as Array<{ key: string; value: string }>;
-    await write(`  "syncState": ${JSON.stringify(Object.fromEntries(syncRows.map((row) => [row.key, row.value])), null, 2)}\n`);
+    await write("\n");
     await write("}\n");
 
     await Promise.race([
@@ -601,20 +565,6 @@ export class LocalDatabase {
         diagnostics: count("parser_diagnostics")
       }
     };
-  }
-
-  setSyncState(key: string, value: string): void {
-    this.db
-      .query(
-        `INSERT INTO sync_state (key, value, updated_at)
-         VALUES (?, ?, ?)
-         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
-      )
-      .run(key, value, new Date().toISOString());
-  }
-
-  getSyncState(key: string): string | undefined {
-    return (this.db.query("SELECT value FROM sync_state WHERE key = ?").get(key) as { value: string } | undefined)?.value;
   }
 
   private sourceTotals(sourceId: string): { conversations: number; messages: number; rawEvidence: number } {

@@ -1,5 +1,7 @@
 # RecallBase Design System
 
+> **Scope note:** RecallBase is now a local-first CLI and browser extension product. The design system still governs the CLI, extension, and any future local surfaces. Sections that describe a hosted Web app, cloud sync UI, or sync states are historical and no longer reflect the current product scope.
+
 ## 1. Design Goal
 
 RecallBase should make users feel that their AI conversation history is safely, quietly, and durably stored, while remaining easy to search and recall.

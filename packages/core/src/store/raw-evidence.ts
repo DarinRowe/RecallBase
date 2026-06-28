@@ -1,4 +1,4 @@
-import type { RawEvidenceInput } from "../domain/conversation";
+import type { RawEvidenceInput } from "../batch/conversation";
 import { contentHash, stableId } from "./identity";
 
 export interface RawEvidenceRecord extends RawEvidenceInput {

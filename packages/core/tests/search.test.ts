@@ -124,15 +124,4 @@ describe("queries", () => {
     expect(queryOpen(db, "missing").ok).toBe(false);
     expect(queryOpen(db, id).ok).toBe(true);
   });
-
-  test("creates bounded sync search documents with matching ids and snippets", () => {
-    const db = seededDb();
-    const docs = db.syncSearchDocuments();
-
-    expect(docs[0]).toMatchObject({
-      conversationId: db.search("diagnostics")[0]!.id,
-      sourceId: "claude-code"
-    });
-    expect(docs[0]!.snippet.length).toBeLessThanOrEqual(280);
-  });
 });

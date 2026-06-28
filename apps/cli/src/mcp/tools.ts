@@ -1,6 +1,5 @@
 import { queryOpen, querySearch, querySources, queryToday, type LocalDatabase } from "@recallbase/core";
 import { refreshBeforeQuery } from "../commands/refresh";
-import { syncStatusCommand } from "../commands/sync";
 import type { CliFlags } from "../config";
 
 export interface McpToolCall {
@@ -26,7 +25,6 @@ export async function callTool(db: LocalDatabase, call: McpToolCall, flags: CliF
   }
   if (call.name === "open") return queryOpen(db, String(call.arguments?.id ?? ""));
   if (call.name === "sources") return querySources(db);
-  if (call.name === "sync_status") return await syncStatusCommand({ db, flags });
   return {
     ok: false,
     meta: { command: "mcp" as const, generatedAt: new Date().toISOString(), schemaVersion: 1 as const, warnings: [] },
@@ -72,11 +70,6 @@ export const mcpTools = [
   {
     name: "sources",
     description: "Return source health and diagnostics.",
-    inputSchema: { type: "object", properties: {}, additionalProperties: false }
-  },
-  {
-    name: "sync_status",
-    description: "Return explicit opt-in sync status.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false }
   }
 ];

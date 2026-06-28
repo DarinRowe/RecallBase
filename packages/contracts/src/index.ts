@@ -5,10 +5,6 @@ export type RecallBaseCommand =
   | "open"
   | "sources"
   | "backup"
-  | "login"
-  | "key"
-  | "sync"
-  | "sync-status"
   | "extension"
   | "extension-install-host"
   | "extension-verify-host"
@@ -22,9 +18,6 @@ export type RecallBaseErrorCode =
   | "ambiguous_id"
   | "source_unavailable"
   | "store_error"
-  | "auth_required"
-  | "auth_failed"
-  | "sync_failed"
   | "privacy_violation"
   | "rate_limited"
   | "unsupported_platform";
@@ -276,120 +269,6 @@ export * from "./extension-debug";
 
 export interface ExtensionHostInstallResult {
   manifests: ExtensionHostManifestResult[];
-}
-
-export type LoginState =
-  | "not_started"
-  | "opening_browser"
-  | "waiting"
-  | "succeeded"
-  | "denied"
-  | "cancelled"
-  | "timeout"
-  | "browser_launch_failed"
-  | "callback_state_mismatch"
-  | "token_storage_failed"
-  | "expired"
-  | "revoked"
-  | "relogin_required";
-
-export interface LoginResult {
-  state: LoginState;
-  authorizationUrl?: string;
-  attemptId?: string;
-  userId?: string;
-  expiresAt?: string;
-}
-
-export interface SyncStatusResult {
-  loggedIn: boolean;
-  mode: "local_only" | "hybrid_private";
-  pendingLocalChanges: number;
-  lastSyncAt?: string;
-  remoteCursor?: string;
-  rawDecryptionAvailable: boolean;
-  readableSurface: Array<"metadata" | "snippet" | "optional_summary" | "encrypted_messages">;
-}
-
-export interface SyncResult extends SyncStatusResult {
-  uploadedSearchDocuments: number;
-  uploadedEncryptedRawBlobs: number;
-  uploadedEncryptedConversationChunks: number;
-  batchId?: string;
-}
-
-export interface SyncSearchDocument {
-  id: string;
-  conversationId: string;
-  sourceId: string;
-  title: string;
-  updatedAt: string;
-  snippet: string;
-  optionalSummary?: string;
-}
-
-export interface ConversationChunkPlaintext {
-  schemaVersion: 1;
-  conversationId: string;
-  messages: MessageDetail[];
-}
-
-export interface EncryptedConversationChunkInput {
-  conversationId: string;
-  chunkId: string;
-  partIndex: number;
-  partCount: number;
-  messageCount: number;
-  keyId: string;
-  keyVersion: 1;
-  algorithm: "AES-GCM";
-  ivBase64Url: string;
-  ciphertextBase64Url: string;
-  contentHashBase64Url: string;
-  encryptedAt: string;
-}
-
-export interface ConversationChunkManifestPart {
-  chunkId: string;
-  partIndex: number;
-  partCount: number;
-  messageCount: number;
-  keyId: string;
-  keyVersion: 1;
-  algorithm: "AES-GCM";
-  contentHashBase64Url: string;
-}
-
-export interface ConversationChunkManifestInput {
-  conversationId: string;
-  chunks: ConversationChunkManifestPart[];
-}
-
-export interface EncryptedConversationChunk extends EncryptedConversationChunkInput {
-  objectKey: string;
-}
-
-export interface EncryptedConversationAvailability {
-  deviceId: string;
-  keyId: string;
-  chunkCount: number;
-  messageCount: number;
-  encryptedAt: string;
-}
-
-export interface SyncedConversationDocument {
-  document: SyncSearchDocument;
-  encryptedConversationChunks: EncryptedConversationChunk[];
-  lockedEncryptedConversationChunks?: EncryptedConversationAvailability[];
-}
-
-export interface DeviceKeyResult {
-  id: string;
-  version: 1;
-  algorithm: "AES-GCM";
-  createdAt: string;
-  path?: string;
-  rawKeyBase64Url?: string;
 }
 
 export function createMeta(command: RecallBaseCommand, warnings: Diagnostic[] = []): ResultMeta {

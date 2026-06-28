@@ -1,6 +1,6 @@
 # CLI Docs
 
-The local CLI imports, searches, opens, backs up, syncs, and exposes RecallBase data to local agents.
+The local CLI imports, searches, opens, backs up, and exposes RecallBase data to local agents.
 
 ## Code Map
 

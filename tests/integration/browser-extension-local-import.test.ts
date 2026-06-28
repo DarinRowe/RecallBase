@@ -30,8 +30,6 @@ describe("browser extension local import", () => {
         sourceLabel: "ChatGPT"
       });
     }
-    expect(db.syncSearchDocuments()[0]).toMatchObject({ sourceId: "browser-extension-chatgpt" });
-    expect(db.syncConversationDetails()[0]?.messages[0]?.text).toContain("rb search");
     expect(backup.conversations[0]?.rawEvidenceRefs).toEqual([]);
     expect(backup.conversations[0]?.metadata).toMatchObject({
       url: "https://chatgpt.com/c/conversation-1",

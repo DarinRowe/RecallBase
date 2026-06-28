@@ -40,8 +40,6 @@
     "package:homebrew": "bun run scripts/package-homebrew.ts",
     "package:release": "bun run scripts/package-release.ts --cli-targets=all",
     "package:release:test": "bun run scripts/package-release.ts --test",
-    "verify:cloudflare": "bun run scripts/verify-cloudflare-sync.ts",
-    "deploy:cloudflare": "bun run scripts/deploy-cloudflare-sync.ts",
     "lint": "bunx tsc -b --pretty false",
     "perf": "bun test tests/perf"
   },
@@ -49,10 +47,5 @@
     "@types/chrome": "^0.0.326",
     "@types/bun": "^1.3.1",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "vite": "^7.1.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
   }
 }

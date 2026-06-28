@@ -89,14 +89,6 @@ export function migrate(db: Database): void {
   `);
 
   db.run(`
-    CREATE TABLE IF NOT EXISTS sync_state (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    )
-  `);
-
-  db.run(`
     CREATE VIRTUAL TABLE IF NOT EXISTS conversation_fts
     USING fts5(conversation_id UNINDEXED, message_id UNINDEXED, title, content)
   `);

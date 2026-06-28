@@ -41,15 +41,6 @@ rb open <fixture-conversation-id> --json
 rb backup --out recallbase-backup.json --json
 ```
 
-Cloudflare sync verification:
-
-```bash
-bun run verify:cloudflare
-RECALLBASE_CF_DEPLOY=1 bun run verify:cloudflare
-```
-
-The first command runs Wrangler dry-run plus in-process sync/search smoke. The second deploys a temporary verification Worker and runs the same CLI sync over real HTTP.
-
 ## Supported Targets
 
 - Development target: current macOS arm64 with Bun `1.3.11`.
@@ -104,5 +95,3 @@ bun run scripts/package-homebrew.ts --version=v0.1.0 --repo=DarinRowe/RecallBase
 ## Known Limits
 
 - SQLite/FTS is a hard requirement. If the compiled binary cannot create an FTS5 table, use the package-manager fallback for that platform.
-- Sync requires explicit login and configured Cloudflare backend credentials.
-- V1 raw encryption keys are device-local; cross-device raw blob decrypt is deferred.

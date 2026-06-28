@@ -1,5 +1,5 @@
-export * from "./domain/conversation";
-export * from "./domain/source";
+export * from "./batch/conversation";
+export * from "./batch/source";
 export * from "./query/queries";
 export * from "./search/search";
 export * from "./store/database";
@@ -7,6 +7,3 @@ export * from "./store/identity";
 export * from "./store/migrations";
 export * from "./store/raw-evidence";
 export * from "./time/local-date";
-export * from "./crypto/key-management";
-export * from "./crypto/raw-encryption";
-export * from "./crypto/conversation-encryption";

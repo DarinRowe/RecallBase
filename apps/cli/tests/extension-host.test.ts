@@ -59,7 +59,7 @@ const payload = {
 describe("extension native host", () => {
   test("health reports the package version", async () => {
     const db = new LocalDatabase();
-    const response = await handleExtensionHostRequest({ flags: { json: true, force: false, dbPath: ":memory:", authPath: "", roots: [], sourceIds: [] }, db }, {
+    const response = await handleExtensionHostRequest({ flags: { json: true, force: false, dbPath: ":memory:", roots: [], sourceIds: [] }, db }, {
       type: "health",
       protocolVersion: 1
     });
@@ -69,7 +69,7 @@ describe("extension native host", () => {
 
   test("imports a browser capture into local search", async () => {
     const db = new LocalDatabase();
-    const response = await handleExtensionHostRequest({ flags: { json: true, force: false, dbPath: ":memory:", authPath: "", roots: [], sourceIds: [] }, db }, {
+    const response = await handleExtensionHostRequest({ flags: { json: true, force: false, dbPath: ":memory:", roots: [], sourceIds: [] }, db }, {
       type: "import",
       protocolVersion: 1,
       payload
@@ -180,7 +180,7 @@ describe("extension native host", () => {
 
   test("malformed payload returns bounded protocol error", async () => {
     const db = new LocalDatabase();
-    const response = await handleExtensionHostRequest({ flags: { json: true, force: false, dbPath: ":memory:", authPath: "", roots: [], sourceIds: [] }, db }, {
+    const response = await handleExtensionHostRequest({ flags: { json: true, force: false, dbPath: ":memory:", roots: [], sourceIds: [] }, db }, {
       type: "import",
       protocolVersion: 1,
       payload: { ...payload, sourceId: "browser-extension:chatgpt" }
