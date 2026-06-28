@@ -1,0 +1,6 @@
+[test]
+coverage = false
+
+[install]
+exact = true
+linker = "hoisted"

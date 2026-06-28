@@ -1,0 +1,25 @@
+{
+  "sessionId": "copilot-session-1",
+  "name": "RecallBase importer check",
+  "creationDate": "2026-05-21T10:00:00.000Z",
+  "lastMessageDate": "2026-05-21T10:05:00.000Z",
+  "workspaceFolder": "/workspace/sanitized",
+  "requests": [
+    {
+      "requestId": "r1",
+      "message": { "text": "Summarize the importer framework." },
+      "timestamp": "2026-05-21T10:00:00.000Z",
+      "response": [
+        { "value": "Use small read-only adapters." },
+        { "value": "Keep parser diagnostics visible." }
+      ],
+      "responseDate": "2026-05-21T10:01:00.000Z"
+    },
+    {
+      "requestId": "r2",
+      "message": { "text": "Handle unknown response shapes." },
+      "timestamp": "2026-05-21T10:04:00.000Z",
+      "response": { "kind": "unsupported" }
+    }
+  ]
+}

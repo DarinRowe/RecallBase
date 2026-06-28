@@ -1,0 +1,5 @@
+{"timestamp":"2026-05-21T09:00:00.000Z","type":"user","sessionId":"claude-session-1","permissionMode":"acceptEdits","uuid":"u1","message":{"role":"user","content":[{"type":"text","text":"Review importer fixture coverage."}]}}
+{"timestamp":"2026-05-21T09:01:00.000Z","type":"assistant","sessionId":"claude-session-1","permissionMode":"acceptEdits","uuid":"a1","message":{"role":"assistant","content":[{"type":"text","text":"The importer should surface malformed JSONL as diagnostics."}]}}
+{"timestamp":"2026-05-21T09:02:00.000Z","type":"tool_result","sessionId":"claude-session-1","uuid":"t1","content":"read-only fixture scan complete"}
+{"timestamp":"2026-05-21T09:03:00.000Z","type":"summary","sessionId":"claude-session-1","summary":"Importer tests cover diagnostics and raw evidence."}
+{"timestamp":

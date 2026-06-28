@@ -1,0 +1,24 @@
+<svg width="1024" height="1024" viewBox="72 72 880 880" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">RecallBase toolbar icon</title>
+  <desc id="desc">A compact RecallBase icon optimized for browser toolbars and favicons.</desc>
+  <defs>
+    <linearGradient id="base" x1="142" y1="112" x2="875" y2="912" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A8B098"/>
+      <stop offset="1" stop-color="#7F896B"/>
+    </linearGradient>
+    <linearGradient id="loop" x1="412" y1="408" x2="700" y2="822" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D46A4A"/>
+      <stop offset="1" stop-color="#8A2F24"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M512 74C654 74 779 91 850 164C922 237 941 361 935 518C929 690 893 817 794 880C695 943 550 950 391 938C241 926 146 885 104 796C62 707 74 577 88 416C102 257 143 164 231 116C319 68 379 74 512 74Z" fill="url(#base)"/>
+  <path d="M236 326H574" stroke="#6F7A5D" stroke-opacity="0.32" stroke-width="76" stroke-linecap="round"/>
+  <path d="M236 455H500" stroke="#6F7A5D" stroke-opacity="0.32" stroke-width="76" stroke-linecap="round"/>
+  <path d="M236 584H414" stroke="#6F7A5D" stroke-opacity="0.32" stroke-width="76" stroke-linecap="round"/>
+  <path d="M236 326H574" stroke="#FFFFFF" stroke-width="60" stroke-linecap="round"/>
+  <path d="M236 455H500" stroke="#FFFFFF" stroke-width="60" stroke-linecap="round"/>
+  <path d="M236 584H414" stroke="#FFFFFF" stroke-width="60" stroke-linecap="round"/>
+  <path d="M432 858C442 780 492 724 578 690C662 657 704 596 692 526C680 462 630 428 574 447C506 470 486 548 526 622C544 656 562 678 578 690" stroke="#FFF0D8" stroke-width="126" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M432 858C442 780 492 724 578 690C662 657 704 596 692 526C680 462 630 428 574 447C506 470 486 548 526 622C544 656 562 678 578 690" stroke="url(#loop)" stroke-width="102" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

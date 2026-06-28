@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/contracts" },
+    { "path": "packages/core" },
+    { "path": "packages/importers" },
+    { "path": "apps/cli" },
+    { "path": "apps/cloudflare" },
+    { "path": "apps/web" }
+  ]
+}

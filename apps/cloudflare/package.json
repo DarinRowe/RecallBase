@@ -1,0 +1,16 @@
+{
+  "name": "@recallbase/cloudflare",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/worker/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bunx tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@recallbase/contracts": "workspace:*"
+  }
+}

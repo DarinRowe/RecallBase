@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "recallbase-sync",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2025-01-01",
+  "workers_dev": true,
+  "assets": {
+    "directory": "../web/dist/assets",
+    "not_found_handling": "single-page-application"
+  },
+  "vars": {
+    "RECALLBASE_SYNC_USER_ID": "local-user",
+    "RECALLBASE_SYNC_DEVICE_ID": "local-device",
+    "RECALLBASE_SYNC_TOKEN_ID": "local-token",
+    "RECALLBASE_HOSTED_BASE_URL": "http://localhost:8787"
+  },
+  "d1_databases": [
+    {
+      "binding": "SYNC_DB",
+      "database_name": "recallbase-sync",
+      "database_id": "__RECALLBASE_D1_DATABASE_ID__",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "RAW_BUCKET",
+      "bucket_name": "recallbase-raw"
+    }
+  ]
+}

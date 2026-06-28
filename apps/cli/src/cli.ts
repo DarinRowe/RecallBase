@@ -1,0 +1,110 @@
+#!/usr/bin/env bun
+import { basename, win32 } from "node:path";
+import { err, type ResultEnvelope } from "@recallbase/contracts";
+import { LocalDatabase } from "@recallbase/core";
+import { parseFlags } from "./config";
+import { backupCommand } from "./commands/backup";
+import { importCommand } from "./commands/import";
+import { loginCommand } from "./commands/login";
+import { keyCommand } from "./commands/key";
+import { openCommand } from "./commands/open";
+import { searchCommand } from "./commands/search";
+import { sourcesCommand } from "./commands/sources";
+import { syncCommand, syncStatusCommand } from "./commands/sync";
+import { todayCommand } from "./commands/today";
+import { extensionHostCommand } from "./commands/extension-host";
+import { extensionInstallCommand } from "./commands/extension-install";
+import { refreshBeforeQuery } from "./commands/refresh";
+import { formatHuman } from "./output/human";
+import { formatJson } from "./output/json";
+import { runMcpServer } from "./mcp/server";
+
+export interface RunResult {
+  code: number;
+  stdout: string;
+}
+
+export function defaultArgv(argv = Bun.argv): string[] {
+  if (isExtensionHostExecutable(argv[1]) || isExtensionHostExecutable(argv[0])) {
+    return ["extension-host", ...argv.slice(isExtensionHostExecutable(argv[1]) ? 2 : 1)];
+  }
+  return argv.slice(2);
+}
+
+export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = process.env): Promise<RunResult> {
+  const { command, rest, flags } = parseFlags(argv, env);
+  if (command === "help" || command === "--help" || command === "-h") {
+    return {
+      code: 0,
+      stdout: "RecallBase commands: import, today, search, open, sources, backup, login, key, sync, sync status, extension, extension-host, mcp\n"
+    };
+  }
+  if (command === "login") {
+    const result = await loginCommand({ flags });
+    return {
+      code: result.ok ? 0 : 1,
+      stdout: flags.json ? formatJson(result) : formatHuman(result)
+    };
+  }
+
+  const db = new LocalDatabase(flags.dbPath);
+  try {
+    if (command === "mcp") {
+      await runMcpServer(db, flags);
+      return { code: 0, stdout: "" };
+    }
+    if (command === "extension-host") {
+      await extensionHostCommand({ flags, db });
+      return { code: 0, stdout: "" };
+    }
+
+    const result = await dispatch(command, rest, { flags, db });
+    return {
+      code: result.ok ? 0 : 1,
+      stdout: flags.json ? formatJson(result) : formatHuman(result)
+    };
+  } finally {
+    db.close();
+  }
+}
+
+export async function main(argv = defaultArgv()): Promise<number> {
+  const result = await runCommand(argv);
+  process.stdout.write(result.stdout);
+  return result.code;
+}
+
+function isExtensionHostExecutable(path: string | undefined): boolean {
+  if (!path) return false;
+  return /^extension-host(?:\.exe)?$/i.test(basename(path)) || /^extension-host(?:\.exe)?$/i.test(win32.basename(path));
+}
+
+async function dispatch(command: string, rest: string[], context: Parameters<typeof todayCommand>[0]): Promise<ResultEnvelope<unknown>> {
+  if (command === "import") return importCommand(context);
+  if (command === "today") {
+    await refreshBeforeQuery(context);
+    return todayCommand(context);
+  }
+  if (command === "search") {
+    if (!rest.join(" ").trim()) return searchCommand(context, rest);
+    await refreshBeforeQuery(context);
+    return searchCommand(context, rest);
+  }
+  if (command === "open") return openCommand(context, rest);
+  if (command === "sources") return sourcesCommand(context);
+  if (command === "backup") return backupCommand(context);
+  if (command === "key") return keyCommand(context, rest);
+  if (command === "sync") return syncCommand(context);
+  if (command === "sync-status") return syncStatusCommand(context);
+  if (command === "extension" && (rest[0] === "install-host" || rest[0] === "verify-host")) return extensionInstallCommand(context, rest);
+  return err("unknown", {
+    code: "invalid_arguments",
+    message: `Unknown command '${command}'.`,
+    hint: "Run rb --help.",
+    details: { attemptedCommand: command }
+  });
+}
+
+if (import.meta.main) {
+  process.exit(await main());
+}

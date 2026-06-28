@@ -1,0 +1,7 @@
+{"timestamp":"2026-05-21T08:00:00.000Z","type":"session_meta","payload":{"session_id":"codex-session-1","cwd":"/workspace/sanitized"}}
+{"timestamp":"2026-05-21T08:01:00.000Z","type":"user","payload":{"session_id":"codex-session-1","message":{"role":"user","content":[{"type":"input_text","text":"Implement importer diagnostics for RecallBase."}]}}}
+{"timestamp":"2026-05-21T08:02:00.000Z","type":"assistant","payload":{"session_id":"codex-session-1","message":{"role":"assistant","content":[{"type":"output_text","text":"I will preserve raw evidence and return parser diagnostics."}]}}}
+{"timestamp":"2026-05-21T08:03:00.000Z","type":"tool_result","payload":{"session_id":"codex-session-1","text":"targeted importer tests passed"}}
+{"timestamp":"2026-05-21T08:04:00.000Z","type":"unknown_event","payload":{"session_id":"codex-session-1","note":"preserve only"}}
+{"timestamp":"2026-05-21T08:02:00.000Z","type":"assistant","payload":{"session_id":"codex-session-1","message":{"role":"assistant","content":[{"type":"output_text","text":"I will preserve raw evidence and return parser diagnostics."}]}}}
+{"timestamp":

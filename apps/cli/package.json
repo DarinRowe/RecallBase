@@ -1,0 +1,22 @@
+{
+  "name": "recallbase",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "recallbase": "./src/cli.ts",
+    "rb": "./src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/cli.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bunx tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@recallbase/contracts": "workspace:*",
+    "@recallbase/core": "workspace:*",
+    "@recallbase/importers": "workspace:*"
+  }
+}

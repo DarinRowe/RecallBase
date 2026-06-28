@@ -1,0 +1,67 @@
+[
+  {
+    "uuid": "claude-web-conversation-1",
+    "name": "RecallBase web export import",
+    "summary": "Import Claude web export data into RecallBase.",
+    "created_at": "2026-04-06T08:00:00.000000Z",
+    "updated_at": "2026-04-06T08:05:00.000000Z",
+    "account": { "uuid": "account-redacted" },
+    "chat_messages": [
+      {
+        "uuid": "message-user-1",
+        "sender": "human",
+        "text": "Can RecallBase import Claude web exports?",
+        "content": [{ "type": "text", "text": "Can RecallBase import Claude web exports?" }],
+        "created_at": "2026-04-06T08:00:01.000000Z",
+        "updated_at": "2026-04-06T08:00:01.000000Z",
+        "attachments": [],
+        "files": []
+      },
+      {
+        "uuid": "message-assistant-1",
+        "sender": "assistant",
+        "text": "Internal chain of thought must not become searchable text. Yes. The importer should auto-detect conversations.json and normalize visible messages.",
+        "content": [
+          { "type": "thinking", "thinking": "Internal chain of thought must not become searchable text." },
+          { "type": "text", "text": "Yes. The importer should auto-detect conversations.json and normalize visible messages." }
+        ],
+        "created_at": "2026-04-06T08:00:05.000000Z",
+        "updated_at": "2026-04-06T08:00:05.000000Z",
+        "attachments": [],
+        "files": []
+      }
+    ]
+  },
+  {
+    "uuid": "claude-web-conversation-empty",
+    "name": "Empty Claude web conversation",
+    "summary": "",
+    "created_at": "2026-04-06T08:10:00.000000Z",
+    "updated_at": "2026-04-06T08:10:00.000000Z",
+    "chat_messages": []
+  },
+  {
+    "uuid": "claude-web-conversation-unsorted",
+    "name": "Unsorted Claude web timestamps",
+    "chat_messages": [
+      {
+        "uuid": "message-late",
+        "sender": "assistant",
+        "text": "Later visible reply.",
+        "created_at": "2026-04-06T09:10:00.000000Z",
+        "updated_at": "2026-04-06T09:10:00.000000Z",
+        "attachments": [],
+        "files": []
+      },
+      {
+        "uuid": "message-early",
+        "sender": "human",
+        "text": "Earlier visible prompt.",
+        "created_at": "2026-04-06T09:00:00.000000Z",
+        "updated_at": "2026-04-06T09:00:00.000000Z",
+        "attachments": [],
+        "files": []
+      }
+    ]
+  }
+]

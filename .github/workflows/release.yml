@@ -1,0 +1,137 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example v0.1.0"
+        required: true
+      publish_npm:
+        description: "Publish npm packages with npm Trusted Publishing"
+        type: boolean
+        default: false
+      homebrew_tap_repo:
+        description: "Optional tap repo, for example DarinRowe/homebrew-tap"
+        required: false
+        default: ""
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+      - run: bun install
+      - run: bun run typecheck
+      - run: bun test tests/packaging
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+      - run: bun run scripts/package-release.ts --version="${{ steps.version.outputs.version }}" --cli-targets=all
+      - run: bun run scripts/package-npm.ts --version="${{ steps.version.outputs.version }}" --targets=all
+      - run: bun run scripts/package-homebrew.ts --version="${{ steps.version.outputs.version }}" --repo="${{ github.repository }}"
+      - name: Publish GitHub release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release upload "$VERSION" ".artifacts/release/$VERSION/"* --clobber
+          else
+            gh release create "$VERSION" ".artifacts/release/$VERSION/"* \
+              --target "$GITHUB_SHA" \
+              --title "RecallBase $VERSION" \
+              --notes-file ".artifacts/release/$VERSION/release-notes.md"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recallbase-npm-packages
+          path: .artifacts/npm/**/tarballs/*.tgz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recallbase-homebrew-cask
+          path: .artifacts/homebrew/Casks/recallbase.rb
+
+  publish-npm:
+    needs: build
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_npm }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+      - uses: actions/download-artifact@v4
+        with:
+          name: recallbase-npm-packages
+          path: npm-packages
+      - name: Publish npm packages
+        run: |
+          npm install -g npm@latest
+          npm --version
+          find_package() {
+            package=$(find npm-packages -type f -name "$1" -print -quit)
+            if [ -z "$package" ] || [ ! -f "$package" ]; then
+              echo "::error::Missing npm package matching $1" >&2
+              exit 1
+            fi
+            printf '%s\n' "$package"
+          }
+          for suffix in darwin-arm64 darwin-x64 linux-arm64 linux-x64 win32-x64; do
+            package=$(find_package "recallbase-*-${suffix}.tgz")
+            npm publish "$package" --access public --tag "$suffix"
+          done
+          meta_package=$(find npm-packages -type f -name 'recallbase-*.tgz' ! -name '*-darwin-*.tgz' ! -name '*-linux-*.tgz' ! -name '*-win32-*.tgz' -print -quit)
+          if [ -z "$meta_package" ] || [ ! -f "$meta_package" ]; then
+            echo "::error::Missing recallbase npm shim package" >&2
+            exit 1
+          fi
+          npm publish "$meta_package" --access public
+
+  update-homebrew:
+    needs: build
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.homebrew_tap_repo != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: recallbase-homebrew-cask
+          path: homebrew
+      - name: Update Homebrew tap
+        env:
+          TAP_REPO: ${{ inputs.homebrew_tap_repo }}
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "::error::HOMEBREW_TAP_TOKEN secret is required to update the tap"
+            exit 1
+          fi
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/${TAP_REPO}.git" tap
+          mkdir -p tap/Casks
+          cp homebrew/recallbase.rb tap/Casks/recallbase.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/recallbase.rb
+          git commit -m "Update RecallBase ${VERSION}"
+          git push
