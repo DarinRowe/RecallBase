@@ -31,6 +31,8 @@ rb extension install-host
 rb extension verify-host
 ```
 
+Firefox native-host compatibility: plain `rb extension install-host` must default to Firefox Extension 0.1.1 add-on ID `recallbase-capture@recallbase.net`. Use `RECALLBASE_FIREFOX_EXTENSION_ID` only for alternate or development Firefox builds.
+
 Once fixture data exists, release smoke must also run:
 
 ```bash
