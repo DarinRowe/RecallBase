@@ -18,6 +18,8 @@ rb search "error message or feature name" --json
 rb open <conversation-id> --json
 ```
 
+Native-host setup: plain `rb extension install-host` / `rb extension verify-host` use Firefox add-on ID `recallbase-capture@recallbase.net`. Set `RECALLBASE_FIREFOX_EXTENSION_ID` only for alternate or development Firefox builds.
+
 Guidelines:
 
 - Start with `rb today --json` when the user asks "what did I do today?", "today", "what happened earlier today?", or wants same-day continuity.

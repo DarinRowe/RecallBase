@@ -182,6 +182,8 @@ rb extension install-host
 rb extension verify-host
 ```
 
+Plain `rb extension install-host` targets Firefox add-on ID `recallbase-capture@recallbase.net` (Firefox Extension 0.1.1). Set `RECALLBASE_FIREFOX_EXTENSION_ID` only when installing for an alternate or development Firefox build.
+
 The native messaging host is only required for RecallBase import and agent access. Markdown download and Obsidian handoff work from the extension UI without installing the CLI.
 
 ---

@@ -6,7 +6,7 @@ import type { CommandContext } from "./shared";
 
 export const EXTENSION_HOST_NAME = "ai.recallbase.extension_host";
 export const DEFAULT_CHROME_EXTENSION_ID = "hagfpddjfmcfjnjghjogkibjilmkgfih";
-export const DEFAULT_FIREFOX_EXTENSION_ID = "recallbase-capture@recallbase.local";
+export const DEFAULT_FIREFOX_EXTENSION_ID = "recallbase-capture@recallbase.net";
 
 type NativeHostPlatform = "darwin" | "linux" | "win32";
 

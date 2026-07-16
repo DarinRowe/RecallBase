@@ -36,7 +36,10 @@ describe("extension native host install manifests", () => {
     const firefoxManifest = firefoxNativeManifest(firefoxTarget!);
 
     expect(chromeManifest.allowed_origins).toEqual(["chrome-extension://abcdefghijklmnopabcdefghijklmnop/"]);
-    expect(firefoxManifest.allowed_extensions).toEqual([DEFAULT_FIREFOX_EXTENSION_ID]);
+    // Firefox Extension 0.1.1 add-on ID; literal so a regression to .local fails
+    expect(firefoxManifest.allowed_extensions).toEqual(["recallbase-capture@recallbase.net"]);
+    expect(firefoxTarget?.allowedIds).toEqual(["recallbase-capture@recallbase.net"]);
+    expect(DEFAULT_FIREFOX_EXTENSION_ID).toBe("recallbase-capture@recallbase.net");
     expect(chromeManifest.path).toBe("/Users/example/.recallbase/extension-host");
     expect(JSON.stringify(chromeManifest)).not.toContain("*");
     expect(JSON.stringify(firefoxManifest)).not.toContain("*");
@@ -46,6 +49,35 @@ describe("extension native host install manifests", () => {
     const [chromeTarget] = nativeManifestTargets("/Users/example/.recallbase/extension-host");
 
     expect(chromeTarget?.allowedIds).toEqual([DEFAULT_CHROME_EXTENSION_ID]);
+  });
+
+  test("uses the Firefox Extension 0.1.1 add-on ID by default", () => {
+    const [, firefoxTarget] = nativeManifestTargets("/Users/example/.recallbase/extension-host");
+
+    expect(firefoxTarget?.allowedIds).toEqual(["recallbase-capture@recallbase.net"]);
+    expect(firefoxNativeManifest(firefoxTarget!).allowed_extensions).toEqual(["recallbase-capture@recallbase.net"]);
+  });
+
+  test("RECALLBASE_FIREFOX_EXTENSION_ID overrides the Firefox default", async () => {
+    const homeDir = mkdtempSync(join(tmpdir(), "recallbase-ff-override-"));
+    const customFirefoxId = "recallbase-capture@dev.example";
+    const env = {
+      RECALLBASE_CHROME_EXTENSION_ID: "abcdefghijklmnopabcdefghijklmnop",
+      RECALLBASE_FIREFOX_EXTENSION_ID: customFirefoxId
+    };
+
+    const install = await extensionInstallCommand({} as Parameters<typeof extensionInstallCommand>[0], ["install-host"], {
+      homeDir,
+      env,
+      rbBinaryPath: "/opt/recallbase/rb",
+      platform: "darwin"
+    });
+
+    expect(install.ok).toBe(true);
+    if (!install.ok) throw new Error("expected install to succeed");
+    const firefoxManifest = install.data.manifests.find((manifest) => manifest.browser === "firefox");
+    expect(firefoxManifest?.allowedIds).toEqual([customFirefoxId]);
+    expect(JSON.parse(readFileSync(firefoxManifest!.manifestPath, "utf8")).allowed_extensions).toEqual([customFirefoxId]);
   });
 
   test("verifies wrapper existence and exact manifest contents", () => {
