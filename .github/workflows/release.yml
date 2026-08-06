@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version, for example v0.1.0"
+        description: "Release version, for example v1.2.3"
         required: true
       publish_npm:
         description: "Publish npm packages with npm Trusted Publishing"

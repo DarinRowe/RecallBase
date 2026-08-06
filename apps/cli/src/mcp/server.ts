@@ -1,4 +1,5 @@
 import type { LocalDatabase } from "@recallbase/core";
+import packageJson from "../../../../package.json";
 import type { CliFlags } from "../config";
 import { callTool, mcpTools } from "./tools";
 
@@ -29,7 +30,7 @@ export async function handleRequest(
       result: {
         protocolVersion: "2024-11-05",
         capabilities: { tools: {} },
-        serverInfo: { name: "recallbase", version: "0.1.0" }
+        serverInfo: { name: "recallbase", version: packageJson.version }
       }
     };
   }

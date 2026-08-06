@@ -1,12 +1,26 @@
 {
   "name": "recallbase",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "description": "Local-first CLI for importing, searching, and exposing AI conversation history to local agents.",
   "license": "MIT",
   "author": "Darin Rowe",
+  "homepage": "https://recallbase.net/desktop-cli/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DarinRowe/RecallBase.git"
   },
+  "bugs": {
+    "url": "https://github.com/DarinRowe/RecallBase/issues"
+  },
+  "keywords": [
+    "recallbase",
+    "cli",
+    "mcp-server",
+    "local-first",
+    "ai-chat",
+    "conversation-history",
+    "coding-agent"
+  ],
   "type": "module",
   "workspaces": [
     "apps/*",

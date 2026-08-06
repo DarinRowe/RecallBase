@@ -36,6 +36,20 @@ describe("npm package artifacts", () => {
       "recallbase-linux-x64": "npm:recallbase@0.1.0-linux-x64"
     });
     expect(meta.repository.url).toBe("git+https://github.com/DarinRowe/RecallBase.git");
+    expect(meta).toMatchObject({
+      version: "0.1.0",
+      license: "MIT",
+      author: "Darin Rowe",
+      homepage: "https://recallbase.net/desktop-cli/",
+      bugs: { url: "https://github.com/DarinRowe/RecallBase/issues" }
+    });
+    expect(meta.keywords).toEqual(
+      expect.arrayContaining(["cli", "mcp-server", "local-first", "conversation-history"])
+    );
+    const readme = await readFile(join(output, "packages", "recallbase", "README.md"), "utf8");
+    expect(readme).toContain("https://recallbase.net/desktop-cli/");
+    expect(readme).toContain("https://recallbase.net/developers/");
+    expect(readme).toContain("https://github.com/DarinRowe/RecallBase");
     expect(await readFile(join(output, "packages", "recallbase", "bin", "recallbase.cjs"), "utf8")).toContain(
       "process.platform + \"-\" + process.arch"
     );
@@ -46,5 +60,7 @@ describe("npm package artifacts", () => {
     expect(darwin.os).toEqual(["darwin"]);
     expect(darwin.cpu).toEqual(["arm64"]);
     expect(darwin.repository.url).toBe("git+https://github.com/DarinRowe/RecallBase.git");
+    expect(darwin.homepage).toBe("https://recallbase.net/desktop-cli/");
+    expect(darwin.license).toBe("MIT");
   });
 });

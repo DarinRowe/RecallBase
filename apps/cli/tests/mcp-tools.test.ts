@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { LocalDatabase } from "@recallbase/core";
+import packageJson from "../../../package.json";
 import { callTool } from "../src/mcp/tools";
 import { handleRequest } from "../src/mcp/server";
 
@@ -44,6 +45,7 @@ describe("MCP tools", () => {
     });
 
     expect(initialized.result.capabilities.tools).toEqual({});
+    expect(initialized.result.serverInfo).toEqual({ name: "recallbase", version: packageJson.version });
     expect(listed.result.tools[0].inputSchema).toBeDefined();
     expect(JSON.parse(called.result.content[0].text).ok).toBe(true);
   });
