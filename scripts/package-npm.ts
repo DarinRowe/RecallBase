@@ -65,9 +65,15 @@ export async function packageNpmRelease(
       name: "recallbase",
       version: platformVersion(version, target.id),
       description: `Native RecallBase CLI binary for ${target.id}.`,
+      license: "MIT",
+      author: "Darin Rowe",
+      homepage: "https://recallbase.net/desktop-cli/",
       repository: {
         type: "git",
         url: "git+https://github.com/DarinRowe/RecallBase.git"
+      },
+      bugs: {
+        url: "https://github.com/DarinRowe/RecallBase/issues"
       },
       os: [target.id.split("-")[0]],
       cpu: [target.id.split("-")[1]],
@@ -82,11 +88,18 @@ export async function packageNpmRelease(
   await writeJson(join(metaDir, "package.json"), {
     name: "recallbase",
     version,
-    description: "Local-first memory layer for AI-assisted coding work.",
+    description: "Local-first CLI for importing, searching, and exposing AI conversation history to local agents.",
+    license: "MIT",
+    author: "Darin Rowe",
+    homepage: "https://recallbase.net/desktop-cli/",
     repository: {
       type: "git",
       url: "git+https://github.com/DarinRowe/RecallBase.git"
     },
+    bugs: {
+      url: "https://github.com/DarinRowe/RecallBase/issues"
+    },
+    keywords: ["recallbase", "cli", "mcp-server", "local-first", "ai-chat", "conversation-history", "coding-agent"],
     bin: {
       rb: "bin/recallbase.cjs",
       recallbase: "bin/recallbase.cjs"
@@ -100,7 +113,20 @@ export async function packageNpmRelease(
   await chmod(join(metaDir, "bin", "recallbase.cjs"), 0o755);
   await writeFile(
     join(metaDir, "README.md"),
-    "# RecallBase CLI\n\nInstall with `npm install -g recallbase`, then run `rb --help`.\n"
+    [
+      "# RecallBase CLI",
+      "",
+      "Local-first CLI for importing, searching, and exposing AI conversation history to local agents.",
+      "",
+      "Install with `npm install -g recallbase`, then run `rb --help`.",
+      "",
+      "- Product: https://recallbase.net/desktop-cli/",
+      "- Install guide: https://recallbase.net/docs/install-cli/",
+      "- Developer resources: https://recallbase.net/developers/",
+      "- Source and issues: https://github.com/DarinRowe/RecallBase",
+      "- Website Docs MCP (public docs, not local history): https://recallbase.net/mcp",
+      ""
+    ].join("\n")
   );
   await runCommand(["npm", "pack", metaDir, "--pack-destination", tarballRoot], runtime.rootDir);
 

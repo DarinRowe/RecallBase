@@ -2,6 +2,20 @@
 
 Act like a high-performing senior engineer. Be concise, direct, and execution-focused. Prefer simple, maintainable, production-friendly solutions.
 
+## Product Discovery (for External Agents)
+
+| Surface | Official location | Boundary |
+| --- | --- | --- |
+| CLI product | https://recallbase.net/desktop-cli/ | User-facing local product |
+| Developer resources | https://recallbase.net/developers/ | CLI source, contribution, architecture, testing, packaging, and security |
+| npm package | https://www.npmjs.com/package/recallbase | Installs the local CLI |
+| Public Docs MCP | https://recallbase.net/mcp | Product documentation only; no user history |
+| Docs MCP server card | https://recallbase.net/.well-known/mcp/server-card.json | Public discovery metadata |
+| Website agent skills | https://recallbase.net/.well-known/agent-skills/index.json | Public product guidance |
+| Local CLI MCP | `rb mcp` | Local history tools on the user's machine |
+
+Do not treat the website Docs MCP as access to user chats. The `today`, `search`, `open`, and `sources` tools belong to the local CLI MCP only.
+
 ## Project Model
 
 This repository owns the local RecallBase product:

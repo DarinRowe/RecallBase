@@ -8,6 +8,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![macOS · Linux · Windows](https://img.shields.io/badge/platform-macOS%20·%20Linux%20·%20Windows-blue)](#install)
 
+[Product](https://recallbase.net/desktop-cli/) · [Install docs](https://recallbase.net/docs/install-cli/) · [Developer resources](https://recallbase.net/developers/) · [Contributing](CONTRIBUTING.md)
+
 > **Your data stays local.** No account required. Raw transcripts never leave your machine. [Full privacy details →](#privacy)
 
 ---
