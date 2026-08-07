@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "recallbase-local-test": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["apps/cli/src/cli.ts", "mcp", "--db", ":memory:", "--no-refresh"],
+      "cwd": ".",
+      "protocolEra": "legacy"
+    }
+  }
+}

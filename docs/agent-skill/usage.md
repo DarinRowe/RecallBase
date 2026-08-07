@@ -29,4 +29,6 @@ Do not use RecallBase as a chat client, notes editor, or broad knowledge graph.
 
 ## MCP
 
-`rb mcp` exposes local tools for `today`, `search`, `open`, and `sources`. Tool responses are JSON envelopes generated from the same query functions as CLI JSON.
+`rb mcp` exposes local tools for `today`, `search`, `open`, and `sources`. Tool responses are JSON envelopes generated from the same query functions as CLI JSON. It uses the MCP `2024-11-05` stdio profile for compatibility; notifications do not receive responses, malformed input returns a JSON-RPC parse error without stopping the server, and failed query envelopes are returned with `isError: true`.
+
+Use `config/mcp-inspector.json` with the official MCP Inspector for an isolated smoke test. That profile uses `:memory:` and `--no-refresh`, so it never reads or imports the user's real RecallBase history. The official Conformance server runner currently accepts HTTP URLs and starts at newer protocol revisions, so this stdio/profile combination is `NOT_SUPPORTED` there rather than a failed test.
