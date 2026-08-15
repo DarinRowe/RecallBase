@@ -1,12 +1,10 @@
 # RecallBase
 
-> AI chats are becoming real work history — ideas, decisions, code reviews, research, prompts, and drafts.
-
-RecallBase helps you save and export conversations from tools like ChatGPT, Claude, Grok, Codex, Claude Code, and more, so useful context does not disappear into browser history.
-
-Built for people who want their AI work to stay searchable, portable, and under their control.
+> Your AI agents forget everything when you close the terminal.
+> RecallBase fixes that — locally, instantly, across every tool you use.
 
 [![npm](https://img.shields.io/npm/v/recallbase)](https://www.npmjs.com/package/recallbase)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/ai-chat-exporter-archive/fapgpimjelmfedlapidmfljcpmenmjeb)
 [![CI](https://img.shields.io/github/actions/workflow/status/DarinRowe/RecallBase/ci.yml?label=CI)](https://github.com/DarinRowe/RecallBase/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![macOS · Linux · Windows](https://img.shields.io/badge/platform-macOS%20·%20Linux%20·%20Windows-blue)](#install)
@@ -145,8 +143,8 @@ The browser extension captures conversations from web AI tools. It can quick-exp
 |    ✓    |   ✓    |   ✓    |    ✓     |  ✓   |     ✓      |
 
 | Kimi | Qwen | Doubao | Tencent Yuanbao | NotebookLM | Google AI Studio | GitHub Copilot | Microsoft Copilot |
-| :--: | :--: | :----: | :-------------: | :--------: | :--------------: | :------------: | :---------------: |
-|  ✓   |  ✓   |   ✓    |        ✓        |     ✓      |        ✓         |       ✓        |         ✓         |
+| :--: | :---------: | :-----------: | :------------------------: | :--------: | :--------------: | :------------: | :---------------: |
+|  ✓   |      ✓      |       ✓       |             ✓              |     ✓      |        ✓         |       ✓        |         ✓         |
 
 ## Install
 
@@ -178,6 +176,8 @@ RecallBase is **local-first by design**:
 ---
 
 ## Browser Extension Setup
+
+[Install the RecallBase browser extension from the Chrome Web Store →](https://chromewebstore.google.com/detail/ai-chat-exporter-archive/fapgpimjelmfedlapidmfljcpmenmjeb)
 
 The browser extension source and browser packages live in a sibling project. This CLI project owns the local native messaging host used by that extension.
 

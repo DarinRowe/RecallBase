@@ -11,6 +11,8 @@ Each GitHub Release includes platform tarballs named `recallbase-<platform>-<ver
 
 The release script packages Bun-compiled CLI targets. npm uses the Codex CLI pattern: `recallbase@<version>` is the command shim, and platform binaries are published as platform-suffixed versions of the same `recallbase` package. The shim references those versions through npm alias optional dependencies such as `recallbase-darwin-arm64: npm:recallbase@<version>-darwin-arm64`.
 
+All npm artifacts copy the repository root `README.md` into the package root. Keep package documentation in that single source; npm displays the copied README after the next version is published.
+
 ## Required Smoke Checks
 
 Before publishing a binary target:

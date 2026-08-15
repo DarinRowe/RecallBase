@@ -9,7 +9,9 @@ describe("npm package artifacts", () => {
   test("creates a native shim package plus platform binary packages", async () => {
     const rootDir = mkdtempSync(join(tmpdir(), "recallbase-npm-"));
     const artifactsRoot = join(rootDir, ".artifacts", "npm");
+    const rootReadme = "# RecallBase\n\nCanonical package documentation.\n";
     await writeFile(join(rootDir, "package.json"), JSON.stringify({ version: "0.1.0" }));
+    await writeFile(join(rootDir, "README.md"), rootReadme);
 
     const commands: string[] = [];
     const output = await packageNpmRelease(parsePackageNpmOptions(["--targets=darwin-arm64,linux-x64"]), {
@@ -47,9 +49,7 @@ describe("npm package artifacts", () => {
       expect.arrayContaining(["cli", "mcp-server", "local-first", "conversation-history"])
     );
     const readme = await readFile(join(output, "packages", "recallbase", "README.md"), "utf8");
-    expect(readme).toContain("https://recallbase.net/desktop-cli/");
-    expect(readme).toContain("https://recallbase.net/developers/");
-    expect(readme).toContain("https://github.com/DarinRowe/RecallBase");
+    expect(readme).toBe(rootReadme);
     expect(await readFile(join(output, "packages", "recallbase", "bin", "recallbase.cjs"), "utf8")).toContain(
       "process.platform + \"-\" + process.arch"
     );
@@ -62,5 +62,8 @@ describe("npm package artifacts", () => {
     expect(darwin.repository.url).toBe("git+https://github.com/DarinRowe/RecallBase.git");
     expect(darwin.homepage).toBe("https://recallbase.net/desktop-cli/");
     expect(darwin.license).toBe("MIT");
+    expect(await readFile(join(output, "packages", "recallbase-darwin-arm64", "README.md"), "utf8")).toBe(
+      rootReadme
+    );
   });
 });

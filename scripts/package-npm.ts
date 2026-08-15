@@ -1,4 +1,4 @@
-import { chmod, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { chmod, copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { type CliTarget, resolveCliTargets } from "./package-release";
 
@@ -79,7 +79,7 @@ export async function packageNpmRelease(
       cpu: [target.id.split("-")[1]],
       files: ["bin"]
     });
-    await writeFile(join(packageDir, "README.md"), `# recallbase ${platformVersion(version, target.id)}\n\nNative RecallBase CLI binary for ${target.id}.\n`);
+    await copyFile(join(runtime.rootDir, "README.md"), join(packageDir, "README.md"));
     await runCommand(["npm", "pack", packageDir, "--pack-destination", tarballRoot], runtime.rootDir);
   }
 
@@ -111,23 +111,7 @@ export async function packageNpmRelease(
   });
   await writeFile(join(metaDir, "bin", "recallbase.cjs"), npmShim(targets.map((target) => target.id)));
   await chmod(join(metaDir, "bin", "recallbase.cjs"), 0o755);
-  await writeFile(
-    join(metaDir, "README.md"),
-    [
-      "# RecallBase CLI",
-      "",
-      "Local-first CLI for importing, searching, and exposing AI conversation history to local agents.",
-      "",
-      "Install with `npm install -g recallbase`, then run `rb --help`.",
-      "",
-      "- Product: https://recallbase.net/desktop-cli/",
-      "- Install guide: https://recallbase.net/docs/install-cli/",
-      "- Developer resources: https://recallbase.net/developers/",
-      "- Source and issues: https://github.com/DarinRowe/RecallBase",
-      "- Website Docs MCP (public docs, not local history): https://recallbase.net/mcp",
-      ""
-    ].join("\n")
-  );
+  await copyFile(join(runtime.rootDir, "README.md"), join(metaDir, "README.md"));
   await runCommand(["npm", "pack", metaDir, "--pack-destination", tarballRoot], runtime.rootDir);
 
   return outputRoot;
