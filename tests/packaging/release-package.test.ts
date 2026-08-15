@@ -32,6 +32,8 @@ describe("release packaging metadata", () => {
     const rootDir = mkdtempSync(join(tmpdir(), "recallbase-release-"));
     const artifactsRoot = join(rootDir, ".artifacts", "release");
     await writeFile(join(rootDir, "package.json"), JSON.stringify({ version: "0.1.0" }));
+    await mkdir(join(rootDir, "scripts"));
+    await writeFile(join(rootDir, "scripts", "install-linux.sh"), "#!/usr/bin/env bash\necho install\n");
 
     const commands: string[] = [];
     const releaseDir = await packageRelease(parsePackageReleaseOptions(["--test"]), {
@@ -54,6 +56,7 @@ describe("release packaging metadata", () => {
     if (!cliName) throw new Error("expected CLI tarball in release output");
     expect(releaseEntries).toEqual([
       "checksums.sha256",
+      "install-linux.sh",
       "manifest.json",
       cliName,
       "release-notes.md"
@@ -69,6 +72,7 @@ describe("release packaging metadata", () => {
     const checksums = await readFile(join(releaseDir, "checksums.sha256"), "utf8");
     expect(checksums).toContain(`  ${cliName}\n`);
     expect(await readFile(join(releaseDir, "release-notes.md"), "utf8")).toContain("rb extension install-host");
+    expect(await readFile(join(releaseDir, "install-linux.sh"), "utf8")).toContain("echo install");
   });
 });
 

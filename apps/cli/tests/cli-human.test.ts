@@ -6,6 +6,12 @@ import { LocalDatabase } from "@recallbase/core";
 import { defaultArgv, runCommand } from "../src/cli";
 
 describe("CLI human output", () => {
+  test("reports the package version without opening the database", async () => {
+    const result = await runCommand(["--version"], { ...process.env, RECALLBASE_DB: "/not/a/real/database.sqlite" });
+
+    expect(result).toEqual({ code: 0, stdout: "recallbase 0.1.2\n" });
+  });
+
   test("empty today points to import without JSON ceremony", async () => {
     const result = await runCommand(["today", "--db", ":memory:"]);
     expect(result.code).toBe(0);
@@ -37,5 +43,43 @@ describe("CLI human output", () => {
       "extension-host",
       "--parent-window=42"
     ]);
+  });
+
+  test("human search shows plain-text metadata and a usable open command", async () => {
+    const path = join(mkdtempSync(join(tmpdir(), "rb-human-search-")), "db.sqlite");
+    const db = new LocalDatabase(path);
+    db.importBatch({
+      sourceId: "codex",
+      sourceLabel: "Codex",
+      confidence: "stable",
+      confidenceReason: "test fixture",
+      conversations: [
+        {
+          sourceId: "codex",
+          sourceLabel: "Codex",
+          upstreamId: "human-search",
+          title: "Deployment rollback",
+          startedAt: "2026-06-28T07:00:00.000Z",
+          updatedAt: "2026-06-28T07:05:00.000Z",
+          rawEvidence: [],
+          messages: [
+            { role: "user", createdAt: "2026-06-28T07:00:00.000Z", text: "The deployment failed, should we rollback?" }
+          ]
+        }
+      ]
+    });
+    db.close();
+
+    const result = await runCommand(["search", "rollback", "--db", path]);
+    const searchBody = JSON.parse((await runCommand(["search", "rollback", "--json", "--db", path])).stdout);
+    const id = searchBody.data.results[0].id;
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Deployment rollback");
+    expect(result.stdout).toContain("[Codex]");
+    expect(result.stdout).toContain("1 message");
+    expect(result.stdout).toContain(`open: rb open ${id}`);
+    expect(result.stdout).toContain("Run the open command shown under a result to view the full conversation.");
+    expect(result.stdout).not.toContain("\x1b");
   });
 });

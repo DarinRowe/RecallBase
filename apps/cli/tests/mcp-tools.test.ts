@@ -31,6 +31,7 @@ describe("MCP tools", () => {
     expect(search.ok).toBe(true);
     if (search.ok && search.meta.command === "search") {
       expect(search.data.results[0]?.title).toBe("MCP parity");
+      expect(search.data.results[0]?.uri).toBe(`recallbase:conversation/${search.data.results[0]?.id}`);
     }
   });
 

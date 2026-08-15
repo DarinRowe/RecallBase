@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";
 import { finished } from "node:stream/promises";
 import { createGzip } from "node:zlib";
-import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 type ReleaseChannel = "stable" | "test";
@@ -136,6 +136,7 @@ export async function packageRelease(
       join(releaseDir, "manifest.json"),
       `${JSON.stringify({ version, channel: options.channel, artifacts: manifest }, null, 2)}\n`
     );
+    await copyFile(join(rootDir, "scripts", "install-linux.sh"), join(releaseDir, "install-linux.sh"));
     await writeFile(join(releaseDir, "release-notes.md"), releaseNotes(version, options.channel));
   } finally {
     await rm(cliBuildDir, { recursive: true, force: true });
@@ -158,7 +159,7 @@ async function sha256(path: string): Promise<string> {
 
 function releaseNotes(version: string, channel: ReleaseChannel): string {
   const qualifier = channel === "test" ? "Test release for CLI dogfooding." : "Release artifacts.";
-  return `# RecallBase ${version}\n\n${qualifier}\n\nInstall CLI:\n\n\`\`\`bash\nnpm install -g recallbase\n# or download the platform tarball from this release and put rb on PATH\n\`\`\`\n\nArtifacts:\n\n- Bun-compiled CLI tarball(s)\n- SHA-256 checksum manifest\n\nNative host setup for the browser extension:\n\n\`\`\`bash\nrb extension install-host\nrb extension verify-host\n\`\`\`\n`;
+  return `# RecallBase ${version}\n\n${qualifier}\n\nInstall CLI:\n\n\`\`\`bash\nnpm install -g recallbase\n# Linux alternative pinned to this release:\ncurl -fsSL https://github.com/DarinRowe/RecallBase/releases/download/${version}/install-linux.sh | env RB_VERSION=${version} bash\n# Or download the platform tarball from this release and put rb on PATH.\n\`\`\`\n\nArtifacts:\n\n- Bun-compiled CLI tarball(s)\n- Linux installer with SHA-256 verification\n- SHA-256 checksum manifest\n\nNative host setup for the browser extension:\n\n\`\`\`bash\nrb extension install-host\nrb extension verify-host\n\`\`\`\n`;
 }
 
 export function resolveCliTargets(targets: CliTarget[]): CliTargetInfo[] {

@@ -4,6 +4,7 @@ import {
   browserHostPermissionPatterns,
   browserSiteIds,
   browserSites,
+  conversationUri,
   EXTENSION_DEBUG_SCHEMA_VERSION,
   err,
   extensionDebugTraceCategories,
@@ -52,7 +53,17 @@ describe("contract envelopes", () => {
     const search = ok<SearchResult>("search", {
       query: "sync",
       filters: { limit: 10 },
-      results: [],
+      results: [{
+        id: "conv_1",
+        sourceId: "codex",
+        sourceLabel: "Codex",
+        title: "Search contract",
+        startedAt: "2026-05-21T10:00:00.000Z",
+        updatedAt: "2026-05-21T10:00:00.000Z",
+        messageCount: 1,
+        score: 1,
+        uri: conversationUri("conv_1")
+      }],
       sourceCoverage: []
     });
     const sources = ok<SourcesResult>("sources", { sources: [] });
@@ -77,6 +88,7 @@ describe("contract envelopes", () => {
       "sourceCoverage"
     ]);
     expect(Object.keys(search.data)).toEqual(["query", "filters", "results", "sourceCoverage"]);
+    expect(search.data.results[0]?.uri).toBe("recallbase:conversation/conv_1");
     expect(Object.keys(open.data)).toEqual([
       "id",
       "sourceId",

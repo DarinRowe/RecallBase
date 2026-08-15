@@ -22,7 +22,7 @@ A clear and concise description of what you expected to happen.
 
 - OS:
 - RecallBase version:
-- Installation method (npm, Homebrew, direct binary):
+- Installation method (npm, Linux installer, direct binary):
 
 **Additional context**
 Add any other context about the problem here.

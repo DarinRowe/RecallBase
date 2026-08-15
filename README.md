@@ -13,12 +13,14 @@
 
 > **Your data stays local.** No account required. Raw transcripts never leave your machine. [Full privacy details →](#privacy)
 
+> **Early release:** RecallBase is usable today, but import coverage and packaging are still evolving. Keep backups of irreplaceable source histories.
+
 ---
 
 ## Get Started in 60 Seconds
 
 ```bash
-npm install -g recallbase   # or: brew install --cask recallbase
+npm install -g recallbase
 
 rb import    # scan all known local sources
 rb today     # what did you work on today?
@@ -154,14 +156,18 @@ The browser extension captures conversations from web AI tools. It can quick-exp
 npm install -g recallbase
 ```
 
-**Homebrew:**
+**Linux installer:**
 
 ```bash
-brew install --cask recallbase
+curl -fsSL https://github.com/DarinRowe/RecallBase/releases/latest/download/install-linux.sh | bash
 ```
+
+The installer supports x86_64 and ARM64 glibc distributions, verifies the release checksum, and installs `rb` to `~/.local/bin` by default. Pin a release with `curl -fsSL https://github.com/DarinRowe/RecallBase/releases/latest/download/install-linux.sh | env RB_VERSION=v0.1.2 bash`.
 
 **Direct download:**
 Download `recallbase-<platform>-<version>.tar.gz` from the [latest GitHub Release](https://github.com/DarinRowe/RecallBase/releases), extract, and put `rb` on your `PATH`.
+
+Homebrew distribution is not public yet; use npm or a release binary until an official tap is available.
 
 ---
 

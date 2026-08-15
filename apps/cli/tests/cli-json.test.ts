@@ -40,6 +40,7 @@ describe("CLI JSON", () => {
     const search = await runCommand(["search", "today", "--json", "--db", path]);
     const searchBody = JSON.parse(search.stdout);
     expect(searchBody.data.results[0].title).toBe("CLI JSON contract");
+    expect(searchBody.data.results[0].uri).toBe(`recallbase:conversation/${searchBody.data.results[0].id}`);
 
     const opened = await runCommand(["open", searchBody.data.results[0].id, "--json", "--db", path]);
     expect(JSON.parse(opened.stdout).data.messages[0].text).toContain("rb today");

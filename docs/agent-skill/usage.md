@@ -13,6 +13,8 @@ rb open <conversation-id> --json
 
 Use `today` for current continuity, `search` for targeted retrieval, and `open` for detail on one conversation. The JSON envelopes are stable and compact; raw upstream evidence is preserved locally but not dumped by default.
 
+Each search result includes `uri: recallbase:conversation/<id>` as its stable cross-process reference. Use the matching `id` with `rb open <id> --json` when details are needed.
+
 `sources` is a health check for imported data. If results look incomplete, check whether browser-extension captures or local AI tool sources have been imported recently.
 
 When an Agent calls `today`, it should transform the JSON into a customer-facing answer about what the user did. The answer should group work into themes, mention concrete tasks and outcomes, and use IDs only as optional follow-up references. Do not respond to a "what did I do today?" prompt with only `conversationId` values or `rb open ...` hints.

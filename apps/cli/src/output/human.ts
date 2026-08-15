@@ -56,10 +56,17 @@ function formatToday(data: TodayResult): string {
 function formatSearch(data: SearchResult): string {
   const lines = [`${data.results.length} result${data.results.length === 1 ? "" : "s"} for "${data.query}"`];
   for (const result of data.results) {
-    lines.push(`- ${result.title} [${result.sourceLabel}] ${result.id}`);
+    const messageLabel = `${result.messageCount} message${result.messageCount === 1 ? "" : "s"}`;
+    lines.push("", result.title);
+    lines.push(`  [${result.sourceLabel}]  updated ${result.updatedAt}  ·  ${messageLabel}`);
     if (result.snippet) lines.push(`  ${result.snippet}`);
+    lines.push(`  open: rb open ${result.id}`);
   }
-  if (data.results.length === 0) lines.push("Try a broader query or run rb sources to check imported sources.");
+  if (data.results.length === 0) {
+    lines.push("Try a broader query or run rb sources to check imported sources.");
+  } else {
+    lines.push("", "Run the open command shown under a result to view the full conversation.");
+  }
   appendSourceWarnings(lines, data.sourceCoverage);
   return `${lines.join("\n")}\n`;
 }
