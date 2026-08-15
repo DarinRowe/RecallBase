@@ -41,7 +41,8 @@ describe("queries", () => {
     if (result.ok) {
       expect(result.data.results[0]).toMatchObject({
         sourceId: "claude-code",
-        title: "Importer diagnostics"
+        title: "Importer diagnostics",
+        uri: `recallbase:conversation/${result.data.results[0]?.id}`
       });
       expect(result.data.results[0]?.snippet).toContain("visible diagnostics");
     }

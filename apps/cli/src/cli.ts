@@ -15,6 +15,7 @@ import { refreshBeforeQuery } from "./commands/refresh";
 import { formatHuman } from "./output/human";
 import { formatJson } from "./output/json";
 import { runMcpServer } from "./mcp/server";
+import packageJson from "../../../package.json";
 
 export interface RunResult {
   code: number;
@@ -33,8 +34,11 @@ export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = 
   if (command === "help" || command === "--help" || command === "-h") {
     return {
       code: 0,
-      stdout: "RecallBase commands: import, today, search, open, sources, backup, extension, extension-host, mcp\n"
+      stdout: "RecallBase commands: import, today, search, open, sources, backup, extension, extension-host, mcp, version\n"
     };
+  }
+  if (command === "version" || command === "--version" || command === "-V") {
+    return { code: 0, stdout: `recallbase ${packageJson.version}\n` };
   }
 
   const db = new LocalDatabase(flags.dbPath);

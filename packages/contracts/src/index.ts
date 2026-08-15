@@ -106,9 +106,16 @@ export interface ConversationRef {
   snippet?: string;
 }
 
+export const conversationUriScheme = "recallbase:conversation";
+
+export function conversationUri(id: string): string {
+  return `${conversationUriScheme}/${id}`;
+}
+
 export interface SearchResultItem extends ConversationRef {
   score: number;
   matchedMessageId?: string;
+  uri: string;
 }
 
 export interface SearchResult {

@@ -1,13 +1,13 @@
 # Release Platforms
 
-RecallBase's preferred install experience should mirror Codex CLI: package-manager install for most users, Homebrew cask on macOS, and direct GitHub Release binaries for users who want explicit artifacts.
+RecallBase's preferred install experience is npm for most users, a checksum-verifying installer on Linux, and direct GitHub Release binaries for users who want explicit artifacts.
 
 ```bash
 npm install -g recallbase
-brew install --cask recallbase
+curl -fsSL https://github.com/DarinRowe/RecallBase/releases/latest/download/install-linux.sh | bash
 ```
 
-Each GitHub Release includes platform tarballs named `recallbase-<platform>-<version>.tar.gz`. Extract the right tarball and put `rb` on your `PATH`.
+Each GitHub Release includes `install-linux.sh` and platform tarballs named `recallbase-<platform>-<version>.tar.gz`. The Linux installer detects x86_64 or ARM64 glibc, verifies the selected archive against `checksums.sha256`, installs `rb` to `~/.local/bin` by default, and runs `rb --version` before reporting success. Set `RB_VERSION=v<version>` to pin a release, `RB_INSTALL_DIR` to select a destination, or `RB_NO_MODIFY_PATH=1` to leave shell profiles unchanged.
 
 The release script packages Bun-compiled CLI targets. npm uses the Codex CLI pattern: `recallbase@<version>` is the command shim, and platform binaries are published as platform-suffixed versions of the same `recallbase` package. The shim references those versions through npm alias optional dependencies such as `recallbase-darwin-arm64: npm:recallbase@<version>-darwin-arm64`.
 
@@ -23,6 +23,7 @@ bun run typecheck
 bun test tests/packaging
 bun run package:release:test
 bun run scripts/package-npm.ts --targets=host
+bash -n scripts/install-linux.sh
 tar -tzf .artifacts/release/<test-version>/recallbase-<platform>-<test-version>.tar.gz
 ```
 
@@ -47,16 +48,16 @@ rb backup --out recallbase-backup.json --json
 
 ## Supported Targets
 
-- Development target: current macOS arm64 with Bun `1.3.11`.
+- Development target: current macOS arm64 with Bun `1.3.14`.
 - CI smoke targets: Linux latest and macOS latest.
 - GitHub Release CLI targets: `darwin-arm64`, `darwin-x64`, `linux-arm64`, `linux-x64`, and `win32-x64`.
-- npm targets: one package, `recallbase`, with the public version plus platform versions such as `0.1.1-darwin-arm64`, `0.1.1-linux-x64`, and `0.1.1-win32-x64`.
+- npm targets: one package, `recallbase`, with the public version plus platform versions such as `0.1.2-darwin-arm64`, `0.1.2-linux-x64`, and `0.1.2-win32-x64`.
 - Native-host install targets: macOS user manifest directories, Linux user manifest directories, and Windows HKCU registry registration with compiled `rb.exe`.
 - Source fallback target: any platform that can run Bun and install the package source.
 
 ## Publishing Notes
 
-`recallbase` is available on npm as of May 22, 2026. npm publishing uses Trusted Publishing/OIDC, not a long-lived npm token. The package follows the Codex CLI pattern: `recallbase@0.1.1` is the command shim, and platform binaries are separate versions of the same package referenced through npm alias optional dependencies.
+`recallbase` is available on npm as of May 22, 2026. npm publishing uses Trusted Publishing/OIDC, not a long-lived npm token. The package follows the Codex CLI pattern: `recallbase@0.1.2` is the command shim, and platform binaries are separate versions of the same package referenced through npm alias optional dependencies.
 
 The trusted publisher for `recallbase` is configured as:
 
@@ -71,17 +72,17 @@ Run the `Release` workflow manually with `version=v<package-version>` and `publi
 The current npm dist-tags should look like:
 
 ```text
-latest        -> 0.1.1
-darwin-arm64  -> 0.1.1-darwin-arm64
-darwin-x64    -> 0.1.1-darwin-x64
-linux-arm64   -> 0.1.1-linux-arm64
-linux-x64     -> 0.1.1-linux-x64
-win32-x64     -> 0.1.1-win32-x64
+latest        -> 0.1.2
+darwin-arm64  -> 0.1.2-darwin-arm64
+darwin-x64    -> 0.1.2-darwin-x64
+linux-arm64   -> 0.1.2-linux-arm64
+linux-x64     -> 0.1.2-linux-x64
+win32-x64     -> 0.1.2-win32-x64
 ```
 
 The first npm publish was completed manually with a short-lived token because npm requires an existing package before Trusted Publishing can be configured. Future publishes should use the workflow path above.
 
-For Homebrew:
+Homebrew distribution is not public yet. Do not advertise a `brew install` command until an official tap exists and the command has been tested from a clean machine. The repository retains cask generation for that future rollout:
 
 1. Create a tap repository such as `DarinRowe/homebrew-tap`.
 2. Save a token with write access to that repo as `HOMEBREW_TAP_TOKEN`.
@@ -91,9 +92,9 @@ For Homebrew:
 Manual release packaging commands:
 
 ```bash
-bun run scripts/package-release.ts --version=v0.1.1 --cli-targets=all
-bun run scripts/package-npm.ts --version=0.1.1 --targets=all
-bun run scripts/package-homebrew.ts --version=v0.1.1 --repo=DarinRowe/RecallBase
+bun run scripts/package-release.ts --version=v0.1.2 --cli-targets=all
+bun run scripts/package-npm.ts --version=0.1.2 --targets=all
+bun run scripts/package-homebrew.ts --version=v0.1.2 --repo=DarinRowe/RecallBase
 ```
 
 ## Known Limits

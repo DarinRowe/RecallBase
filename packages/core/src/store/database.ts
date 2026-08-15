@@ -3,13 +3,14 @@ import { dirname } from "node:path";
 import { once } from "node:events";
 import { createHash } from "node:crypto";
 import { Database } from "bun:sqlite";
-import type {
-  BackupResult,
-  ConversationDetail,
-  ConversationRef,
-  Diagnostic,
-  SearchResultItem,
-  SourceStatus
+import {
+  conversationUri,
+  type BackupResult,
+  type ConversationDetail,
+  type ConversationRef,
+  type Diagnostic,
+  type SearchResultItem,
+  type SourceStatus
 } from "@recallbase/contracts";
 import type { ImportBatchInput, NormalizedConversationInput, NormalizedMessageInput, RawEvidenceInput } from "../batch/conversation";
 import { makeSnippet, toFtsQuery } from "../search/search";
@@ -376,7 +377,8 @@ export class LocalDatabase {
       unique.set(row.id, {
         ...toConversationRef(row, messageSnippet(row.message_text, row.message_thinking, query)),
         score: row.score,
-        matchedMessageId: row.message_id
+        matchedMessageId: row.message_id,
+        uri: conversationUri(row.id)
       });
       if (unique.size >= limit) break;
     }
