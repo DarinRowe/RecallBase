@@ -1,0 +1,9 @@
+schema: backlink-product/v1
+id: recallbase-cli
+canonical_url: https://github.com/DarinRowe/RecallBase
+references:
+  facts:
+    path: docs/backlinks/facts.yaml
+    contract: backlink-product-facts/v1
+  copy: null
+  assets: null

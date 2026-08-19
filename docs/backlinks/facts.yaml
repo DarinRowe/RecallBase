@@ -1,0 +1,14 @@
+schema: backlink-product-facts/v1
+facts:
+  product_name: RecallBase
+  canonical_url: https://github.com/DarinRowe/RecallBase
+  product_type: GitHub repository
+  category: open-source local-first AI conversation history CLI
+  license: MIT
+  distribution: npm package and GitHub release binaries
+  summary: RecallBase is an open-source, local-first CLI that imports and searches AI conversation history and exposes it to local agents through a built-in MCP server.
+prohibited_claims:
+  - cloud sync
+  - cloud backup
+  - team collaboration
+  - server-side raw conversation storage
