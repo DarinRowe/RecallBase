@@ -15,7 +15,7 @@ Use this as the first stop for CLI, local database, and agent integration work.
 
 - Agent integration guide: `agent-skill/usage.md`
 - `npx skills` install and update reference: `agent-skill/npx-skills-installation-research.md`
-- Runtime skill for local agents: `../agent/recallbase/SKILL.md`
+- Runtime skill for local agents: `../skills/recallbase/SKILL.md`
 
 ## Related Project
 

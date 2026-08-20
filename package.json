@@ -35,6 +35,8 @@
     "test": "bun test",
     "test:packaging": "bun test tests/packaging",
     "package:cli": "bun run scripts/package-cli.ts",
+    "package:agent-skill": "bun run scripts/package-agent-skill.ts",
+    "package:agent-skill:check": "bun run scripts/package-agent-skill.ts --check",
     "package:npm": "bun run scripts/package-npm.ts --targets=all",
     "package:homebrew": "bun run scripts/package-homebrew.ts",
     "package:release": "bun run scripts/package-release.ts --cli-targets=all",

@@ -1,0 +1,20 @@
+{
+  "name": "recallbase",
+  "displayName": "RecallBase",
+  "version": "0.1.3",
+  "description": "Recover context from local AI conversation history through the local RecallBase CLI.",
+  "author": {
+    "name": "Darin Rowe",
+    "url": "https://github.com/DarinRowe"
+  },
+  "homepage": "https://recallbase.net/desktop-cli/",
+  "repository": "https://github.com/DarinRowe/RecallBase",
+  "license": "MIT",
+  "keywords": [
+    "agent-skill",
+    "conversation-history",
+    "local-first",
+    "memory"
+  ],
+  "skills": "./skills/"
+}

@@ -6,7 +6,7 @@ Read this file when the CLI is unavailable, results are empty or incomplete, imp
 
 1. Run `rb --version` to confirm which local release is active.
 2. Run `rb sources --json` and inspect health, counts, import times, and diagnostics.
-3. Run `rb import --json` when known local sources have not been imported. `today` and non-empty `search` queries normally refresh known default sources automatically; explicit database paths, explicit roots, and `--no-refresh` suppress that refresh.
+3. Run `rb import --json` when known local sources have not been imported. It skips unchanged sources; use `rb import --force --json` only when a full re-import is required. `today` and non-empty `search` queries normally refresh known default sources automatically; explicit database paths, explicit roots, and `--no-refresh` suppress that refresh.
 4. Retry the narrow query. Stop when results are available or the source status identifies the missing coverage.
 
 If `rb` is not installed, report that prerequisite. Install it only within the user's authorization; the standard package command is `npm install -g recallbase`.
