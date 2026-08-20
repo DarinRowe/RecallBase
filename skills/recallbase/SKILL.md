@@ -37,4 +37,4 @@ The response is complete when every material claim is grounded in retrieved hist
 ## Conditional references
 
 - Read [references/results.md](references/results.md) when interpreting unfamiliar fields or building against the JSON contract.
-- Read [references/troubleshooting.md](references/troubleshooting.md) when `rb` is unavailable, retrieval is empty or incomplete, imports fail, or browser capture setup is unhealthy.
+- Read [references/troubleshooting.md](references/troubleshooting.md) when `rb` is unavailable, retrieval is empty or incomplete, imports fail, a full re-import is required, or browser capture setup is unhealthy.

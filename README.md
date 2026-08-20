@@ -137,7 +137,7 @@ The agent gains four tools: `today`, `search`, `open`, and `sources`. The MCP se
 
 ### Agent Skill
 
-The portable Agent Skills package lives in [`agent/recallbase/`](agent/recallbase/). Install it globally with the [`skills` CLI](https://github.com/vercel-labs/skills) so RecallBase is available across projects:
+The portable Agent Skills package lives in [`skills/recallbase/`](skills/recallbase/). Install it globally with the [`skills` CLI](https://github.com/vercel-labs/skills) so RecallBase is available across projects:
 
 ```bash
 npx skills add DarinRowe/RecallBase --global

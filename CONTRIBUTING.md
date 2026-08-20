@@ -26,7 +26,7 @@ See [docs/README.md](docs/README.md) for architecture notes, importer contracts,
 - Keep the CLI local-first and privacy-preserving.
 - Do not add login or cloud-sync requirements to local features.
 - Avoid heavy abstractions or new dependencies for small features.
-- Update `agent/recallbase/SKILL.md` if you change CLI commands, JSON shapes, or command semantics.
+- Update `skills/recallbase/SKILL.md` if you change CLI commands, JSON shapes, or command semantics.
 - Follow the existing code style and formatting.
 
 ## Testing

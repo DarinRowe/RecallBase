@@ -15,7 +15,7 @@ The local CLI imports, searches, opens, backs up, and exposes RecallBase data to
 
 - Agent integration: `../agent-skill/usage.md`
 - Release packaging: `../release/platforms.md`
-- Runtime agent skill: `../../agent/recallbase/SKILL.md`
+- Runtime agent skill: `../../skills/recallbase/SKILL.md`
 - Browser extension project: sibling project outside this repository
 
-When CLI commands, JSON shape, or command semantics change, update `../../agent/recallbase/SKILL.md`.
+When CLI commands, JSON shape, or command semantics change, update `../../skills/recallbase/SKILL.md`.

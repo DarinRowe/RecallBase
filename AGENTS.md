@@ -23,7 +23,7 @@ This repository owns the local RecallBase product:
 1. Local CLI `rb`: imports, searches, opens, backs up, and exposes local history through JSON/MCP.
 2. Core local database/search packages.
 3. Importers for local AI tool histories and official exports.
-4. Runtime agent skill in `agent/recallbase`.
+4. Runtime agent skill in `skills/recallbase`.
 
 The browser extension source lives in a sibling project. This repository still owns the native host commands used by that extension.
 
@@ -31,8 +31,7 @@ The browser extension source lives in a sibling project. This repository still o
 
 - Local features do not require login or network access.
 - Native host diagnostics must not expose local database paths, secrets, raw DOM, API payloads, headers, cookies, tokens, full URL queries, clipboard contents, or conversation text.
-- CLI command, JSON shape, or command semantics changes must update `agent/recallbase/SKILL.md`.
-- When CLI commands, JSON shapes, or command semantics change, update `agent/recallbase/SKILL.md` accordingly.
+- CLI command, JSON shape, or command semantics changes must update `skills/recallbase/SKILL.md`.
 - Search performance matters; avoid slowing local retrieval.
 
 ## Docs
@@ -42,7 +41,7 @@ The browser extension source lives in a sibling project. This repository still o
 - Privacy model: `docs/product/privacy.md`
 - Release platforms: `docs/release/platforms.md`
 - Agent integration: `docs/agent-skill/usage.md`
-- Runtime skill: `agent/recallbase/SKILL.md`
+- Runtime skill: `skills/recallbase/SKILL.md`
 
 ## Work Rules
 
