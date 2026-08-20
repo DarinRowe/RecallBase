@@ -13,13 +13,13 @@ describe("Linux installer", () => {
     const result = runInstaller(fixture, {});
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout.toString()).toContain("installed recallbase 0.1.2");
-    expect(readFileSync(join(fixture.installDir, "rb"), "utf8")).toContain("recallbase 0.1.2");
+    expect(result.stdout.toString()).toContain("installed recallbase 0.1.3");
+    expect(readFileSync(join(fixture.installDir, "rb"), "utf8")).toContain("recallbase 0.1.3");
   });
 
   test("stops before installation when the checksum does not match", async () => {
     const fixture = await makeFixture();
-    const result = runInstaller(fixture, { RB_VERSION: "0.1.2", FAKE_SHA: "0".repeat(64) });
+    const result = runInstaller(fixture, { RB_VERSION: "0.1.3", FAKE_SHA: "0".repeat(64) });
 
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr.toString()).toContain("checksum mismatch");
@@ -27,7 +27,7 @@ describe("Linux installer", () => {
 
   test("rejects musl before downloading an incompatible binary", async () => {
     const fixture = await makeFixture("musl libc");
-    const result = runInstaller(fixture, { RB_VERSION: "v0.1.2" });
+    const result = runInstaller(fixture, { RB_VERSION: "v0.1.3" });
 
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr.toString()).toContain("musl Linux is not supported");
@@ -56,8 +56,8 @@ async function makeFixture(lddOutput = "ldd (GNU libc) 2.39"): Promise<Fixture> 
     mkdir(installDir)
   ]);
 
-  await writeExecutable(join(payloadDir, "rb"), "#!/bin/sh\nprintf 'recallbase 0.1.2\\n'\n");
-  const archiveName = "recallbase-x86_64-unknown-linux-gnu-v0.1.2.tar.gz";
+  await writeExecutable(join(payloadDir, "rb"), "#!/bin/sh\nprintf 'recallbase 0.1.3\\n'\n");
+  const archiveName = "recallbase-x86_64-unknown-linux-gnu-v0.1.3.tar.gz";
   const archive = join(root, archiveName);
   const tarResult = Bun.spawnSync(["tar", "-czf", archive, "-C", payloadDir, "rb"]);
   if (!tarResult.success) throw new Error(tarResult.stderr.toString());
@@ -84,7 +84,7 @@ async function makeFixture(lddOutput = "ldd (GNU libc) 2.39"): Promise<Fixture> 
     "  shift",
     "done",
     "case \"$url\" in",
-    "  */releases/latest) printf 'https://github.com/DarinRowe/RecallBase/releases/tag/v0.1.2' ;;",
+    "  */releases/latest) printf 'https://github.com/DarinRowe/RecallBase/releases/tag/v0.1.3' ;;",
     "  */checksums.sha256) cp \"$FAKE_CHECKSUM_FILE\" \"$destination\" ;;",
     "  *) cp \"$FAKE_ARCHIVE\" \"$destination\" ;;",
     "esac",

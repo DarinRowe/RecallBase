@@ -34,7 +34,7 @@ rb extension install-host
 rb extension verify-host
 ```
 
-Firefox native-host compatibility: plain `rb extension install-host` must default to Firefox Extension 0.1.1 add-on ID `recallbase-capture@recallbase.net`. Use `RECALLBASE_FIREFOX_EXTENSION_ID` only for alternate or development Firefox builds.
+Native-host compatibility: plain `rb extension install-host` must allow Chrome Web Store ID `fapgpimjelmfedlapidmfljcpmenmjeb`, Microsoft Edge Add-ons ID `gnlcemcmimkbgmnlclipknjjghllfdac`, development Chromium ID `hagfpddjfmcfjnjghjogkibjilmkgfih`, and Firefox add-on ID `recallbase-capture@recallbase.net`. `RECALLBASE_CHROME_EXTENSION_ID` adds an exact alternate Chromium ID; `RECALLBASE_FIREFOX_EXTENSION_ID` replaces the Firefox default. Release smoke must require `verify-host` to exit nonzero for missing or stale setup and zero only after the installed host answers the v1 health request.
 
 Once fixture data exists, release smoke must also run:
 
@@ -51,13 +51,13 @@ rb backup --out recallbase-backup.json --json
 - Development target: current macOS arm64 with Bun `1.3.14`.
 - CI smoke targets: Linux latest and macOS latest.
 - GitHub Release CLI targets: `darwin-arm64`, `darwin-x64`, `linux-arm64`, `linux-x64`, and `win32-x64`.
-- npm targets: one package, `recallbase`, with the public version plus platform versions such as `0.1.2-darwin-arm64`, `0.1.2-linux-x64`, and `0.1.2-win32-x64`.
-- Native-host install targets: macOS user manifest directories, Linux user manifest directories, and Windows HKCU registry registration with compiled `rb.exe`.
+- npm targets: one package, `recallbase`, with the public version plus platform versions such as `0.1.3-darwin-arm64`, `0.1.3-linux-x64`, and `0.1.3-win32-x64`.
+- Native-host install targets: Chrome, Microsoft Edge, and Firefox per-user locations on macOS/Linux/Windows, Chrome for Testing per-user locations on macOS/Linux, and browser-specific Windows HKCU registration with compiled `rb.exe`.
 - Source fallback target: any platform that can run Bun and install the package source.
 
 ## Publishing Notes
 
-`recallbase` is available on npm as of May 22, 2026. npm publishing uses Trusted Publishing/OIDC, not a long-lived npm token. The package follows the Codex CLI pattern: `recallbase@0.1.2` is the command shim, and platform binaries are separate versions of the same package referenced through npm alias optional dependencies.
+`recallbase` is available on npm as of May 22, 2026. npm publishing uses Trusted Publishing/OIDC, not a long-lived npm token. The package follows the Codex CLI pattern: `recallbase@0.1.3` is the command shim, and platform binaries are separate versions of the same package referenced through npm alias optional dependencies.
 
 The trusted publisher for `recallbase` is configured as:
 
@@ -72,12 +72,12 @@ Run the `Release` workflow manually with `version=v<package-version>` and `publi
 The current npm dist-tags should look like:
 
 ```text
-latest        -> 0.1.2
-darwin-arm64  -> 0.1.2-darwin-arm64
-darwin-x64    -> 0.1.2-darwin-x64
-linux-arm64   -> 0.1.2-linux-arm64
-linux-x64     -> 0.1.2-linux-x64
-win32-x64     -> 0.1.2-win32-x64
+latest        -> 0.1.3
+darwin-arm64  -> 0.1.3-darwin-arm64
+darwin-x64    -> 0.1.3-darwin-x64
+linux-arm64   -> 0.1.3-linux-arm64
+linux-x64     -> 0.1.3-linux-x64
+win32-x64     -> 0.1.3-win32-x64
 ```
 
 The first npm publish was completed manually with a short-lived token because npm requires an existing package before Trusted Publishing can be configured. Future publishes should use the workflow path above.
@@ -92,9 +92,9 @@ Homebrew distribution is not public yet. Do not advertise a `brew install` comma
 Manual release packaging commands:
 
 ```bash
-bun run scripts/package-release.ts --version=v0.1.2 --cli-targets=all
-bun run scripts/package-npm.ts --version=0.1.2 --targets=all
-bun run scripts/package-homebrew.ts --version=v0.1.2 --repo=DarinRowe/RecallBase
+bun run scripts/package-release.ts --version=v0.1.3 --cli-targets=all
+bun run scripts/package-npm.ts --version=0.1.3 --targets=all
+bun run scripts/package-homebrew.ts --version=v0.1.3 --repo=DarinRowe/RecallBase
 ```
 
 ## Known Limits

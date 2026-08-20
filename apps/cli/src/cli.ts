@@ -40,6 +40,13 @@ export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = 
   if (command === "version" || command === "--version" || command === "-V") {
     return { code: 0, stdout: `recallbase ${packageJson.version}\n` };
   }
+  if (command === "extension" && (rest[0] === "install-host" || rest[0] === "verify-host")) {
+    const result = await extensionInstallCommand(undefined, rest, { env });
+    return {
+      code: result.ok ? 0 : 1,
+      stdout: flags.json ? formatJson(result) : formatHuman(result)
+    };
+  }
 
   const db = new LocalDatabase(flags.dbPath);
   try {
@@ -87,7 +94,6 @@ async function dispatch(command: string, rest: string[], context: Parameters<typ
   if (command === "open") return openCommand(context, rest);
   if (command === "sources") return sourcesCommand(context);
   if (command === "backup") return backupCommand(context);
-  if (command === "extension" && (rest[0] === "install-host" || rest[0] === "verify-host")) return extensionInstallCommand(context, rest);
   return err("unknown", {
     code: "invalid_arguments",
     message: `Unknown command '${command}'.`,

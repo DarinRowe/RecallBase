@@ -246,7 +246,7 @@ export type ExtensionHostRequest =
   | { type: "status"; protocolVersion: 1; sourceId?: string };
 
 export type ExtensionHostResponse =
-  | { ok: true; type: "health"; protocolVersion: 1; version: string; dbPath: string }
+  | { ok: true; type: "health"; protocolVersion: 1; version: string }
   | {
       ok: true;
       type: "import";
@@ -263,7 +263,7 @@ export type ExtensionHostResponse =
   | { ok: false; type: "error"; error: { code: RecallBaseErrorCode | "bridge_missing" | "protocol_error"; message: string } };
 
 export interface ExtensionHostManifestResult {
-  browser: "chrome" | "firefox";
+  browser: "chrome" | "chrome-for-testing" | "edge" | "firefox";
   manifestPath: string;
   hostName: string;
   binaryPath: string;

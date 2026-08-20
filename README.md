@@ -162,7 +162,7 @@ npm install -g recallbase
 curl -fsSL https://github.com/DarinRowe/RecallBase/releases/latest/download/install-linux.sh | bash
 ```
 
-The installer supports x86_64 and ARM64 glibc distributions, verifies the release checksum, and installs `rb` to `~/.local/bin` by default. Pin a release with `curl -fsSL https://github.com/DarinRowe/RecallBase/releases/latest/download/install-linux.sh | env RB_VERSION=v0.1.2 bash`.
+The installer supports x86_64 and ARM64 glibc distributions, verifies the release checksum, and installs `rb` to `~/.local/bin` by default. Pin a release with `curl -fsSL https://github.com/DarinRowe/RecallBase/releases/latest/download/install-linux.sh | env RB_VERSION=v0.1.3 bash`.
 
 **Direct download:**
 Download `recallbase-<platform>-<version>.tar.gz` from the [latest GitHub Release](https://github.com/DarinRowe/RecallBase/releases), extract, and put `rb` on your `PATH`.
@@ -193,7 +193,7 @@ rb extension install-host
 rb extension verify-host
 ```
 
-Plain `rb extension install-host` targets Firefox add-on ID `recallbase-capture@recallbase.net` (Firefox Extension 0.1.1). Set `RECALLBASE_FIREFOX_EXTENSION_ID` only when installing for an alternate or development Firefox build.
+`install-host` writes per-user manifests for Chrome, Chrome for Testing (macOS/Linux), Microsoft Edge, and Firefox, then starts the host with an in-memory database to verify the native messaging protocol. The Chromium manifests allow the published Chrome and Edge IDs plus the stable development ID. `RECALLBASE_CHROME_EXTENSION_ID` adds an exact alternate Chromium ID; `RECALLBASE_FIREFOX_EXTENSION_ID` replaces the default Firefox add-on ID for alternate or development builds. `verify-host` is read-only and exits nonzero when a manifest, executable wrapper, registry entry, or host health check fails.
 
 The native messaging host is only required for RecallBase import and agent access. Markdown download and Obsidian handoff work from the extension UI without installing the CLI.
 

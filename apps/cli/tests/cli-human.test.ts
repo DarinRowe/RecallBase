@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync } from "node:fs";
+import { existsSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalDatabase } from "@recallbase/core";
@@ -9,7 +9,15 @@ describe("CLI human output", () => {
   test("reports the package version without opening the database", async () => {
     const result = await runCommand(["--version"], { ...process.env, RECALLBASE_DB: "/not/a/real/database.sqlite" });
 
-    expect(result).toEqual({ code: 0, stdout: "recallbase 0.1.2\n" });
+    expect(result).toEqual({ code: 0, stdout: "recallbase 0.1.3\n" });
+  });
+
+  test("native-host verification does not initialize the local database", async () => {
+    const dbPath = join(mkdtempSync(join(tmpdir(), "rb-verify-no-db-")), "recallbase.sqlite");
+
+    await runCommand(["extension", "verify-host", "--json"], { ...process.env, RECALLBASE_DB: dbPath });
+
+    expect(existsSync(dbPath)).toBe(false);
   });
 
   test("empty today points to import without JSON ceremony", async () => {
