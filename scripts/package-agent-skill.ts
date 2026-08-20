@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const skillRoot = resolve(repositoryRoot, "skills/recallbase");
-export const singleFileSkillPath = resolve(repositoryRoot, "distributions/recallbase.skill.md");
+export const singleFileSkillPath = resolve(repositoryRoot, "distributions/recallbase/SKILL.md");
 
 const references = [
   { path: "references/mcp.md", anchor: "local-mcp" },
@@ -33,12 +33,12 @@ if (import.meta.main) {
   if (check) {
     const actual = await Bun.file(singleFileSkillPath).text().catch(() => "");
     if (actual !== expected) {
-      console.error("distributions/recallbase.skill.md is out of date; run bun run package:agent-skill");
+      console.error("distributions/recallbase/SKILL.md is out of date; run bun run package:agent-skill");
       process.exit(1);
     }
     console.log("Agent Skill distribution is up to date.");
   } else {
     await Bun.write(singleFileSkillPath, expected);
-    console.log("Wrote distributions/recallbase.skill.md");
+    console.log("Wrote distributions/recallbase/SKILL.md");
   }
 }

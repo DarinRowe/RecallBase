@@ -15,6 +15,6 @@ The fixture-backed integration test at `tests/integration/agent-access.test.ts` 
 
 The repository root is also a Claude Code plugin. Its `.claude-plugin/plugin.json` points Claude Code at the canonical `skills/` directory, so Claude Code, GitHub CLI, and `npx skills` share the same `SKILL.md` and references instead of maintaining copies. Validate the package from the repository root with `claude plugin validate .` and `gh skill publish --dry-run` before marketplace submission or release.
 
-The root `gemini-extension.json` exposes that same canonical directory to Gemini CLI. Validate it with `gemini extensions validate .` before release. Registries that accept only one Markdown file use the generated `distributions/recallbase.skill.md`; rebuild it with `bun run package:agent-skill` and verify it with `bun run package:agent-skill:check` so the distribution cannot drift from the canonical Skill and references.
+The root `gemini-extension.json` exposes that same canonical directory to Gemini CLI. Validate it with `gemini extensions validate .` before release. Registries that accept only one Markdown file use the generated `distributions/recallbase/SKILL.md`; rebuild it with `bun run package:agent-skill` and verify it with `bun run package:agent-skill:check` so the distribution cannot drift from the canonical Skill and references.
 
 For isolated MCP smoke tests, use `config/mcp-inspector.json`. It uses `:memory:` and `--no-refresh`, so it never reads or imports the user's real RecallBase history.

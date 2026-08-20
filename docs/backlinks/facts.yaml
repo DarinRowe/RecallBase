@@ -18,7 +18,7 @@ facts:
   claude_plugin_layout: The repository root is a single-Skill Claude Code plugin whose manifest points to the canonical skills directory.
   gemini_extension_path: gemini-extension.json
   gemini_extension_layout: The repository root is a Gemini CLI extension whose canonical Agent Skill remains in skills/recallbase.
-  agent_skill_single_file_url: https://github.com/DarinRowe/RecallBase/blob/main/distributions/recallbase.skill.md
+  agent_skill_single_file_url: https://github.com/DarinRowe/RecallBase/blob/main/distributions/recallbase/SKILL.md
   agent_skill_single_file_generation: The single-file distribution is deterministically generated from the canonical SKILL.md and its three references and is protected by an integration test.
 prohibited_claims:
   - cloud sync
