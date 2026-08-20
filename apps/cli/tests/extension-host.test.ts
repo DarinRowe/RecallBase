@@ -65,6 +65,7 @@ describe("extension native host", () => {
     });
 
     expect(response).toMatchObject({ ok: true, type: "health", version: packageJson.version });
+    expect(response).not.toHaveProperty("dbPath");
   });
 
   test("imports a browser capture into local search", async () => {

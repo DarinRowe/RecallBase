@@ -18,7 +18,7 @@ rb search "error message or feature name" --json
 rb open <conversation-id> --json
 ```
 
-Native-host setup: plain `rb extension install-host` / `rb extension verify-host` use Firefox add-on ID `recallbase-capture@recallbase.net`. Set `RECALLBASE_FIREFOX_EXTENSION_ID` only for alternate or development Firefox builds.
+Native-host setup: `rb extension install-host` installs Chrome, Chrome for Testing (macOS/Linux), Edge, and Firefox manifests and verifies the host protocol. `rb extension verify-host` is read-only and exits nonzero for missing, stale, non-executable, or unhealthy setup. Defaults include the published Chrome/Edge identities, the stable Chromium development identity, and Firefox add-on ID `recallbase-capture@recallbase.net`. `RECALLBASE_CHROME_EXTENSION_ID` adds an exact alternate Chromium ID; `RECALLBASE_FIREFOX_EXTENSION_ID` replaces the Firefox default.
 
 Use `rb --version` when diagnosing an installation or confirming which local release is active.
 

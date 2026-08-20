@@ -25,8 +25,7 @@ export async function handleExtensionHostRequest(
         ok: true,
         type: "health",
         protocolVersion: 1,
-        version: RECALLBASE_VERSION,
-        dbPath: context.flags.dbPath
+        version: RECALLBASE_VERSION
       };
     }
 

@@ -2,9 +2,11 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, realpathS
 import { homedir } from "node:os";
 import { dirname, extname, join, resolve, win32 } from "node:path";
 import { err, ok, type ExtensionHostInstallResult, type ExtensionHostManifestResult, type ResultEnvelope } from "@recallbase/contracts";
-import type { CommandContext } from "./shared";
+import { encodeNativeMessage } from "../extension/native-protocol";
 
 export const EXTENSION_HOST_NAME = "ai.recallbase.extension_host";
+export const CHROME_STORE_EXTENSION_ID = "fapgpimjelmfedlapidmfljcpmenmjeb";
+export const EDGE_STORE_EXTENSION_ID = "gnlcemcmimkbgmnlclipknjjghllfdac";
 export const DEFAULT_CHROME_EXTENSION_ID = "hagfpddjfmcfjnjghjogkibjilmkgfih";
 export const DEFAULT_FIREFOX_EXTENSION_ID = "recallbase-capture@recallbase.net";
 
@@ -21,10 +23,11 @@ type ExtensionInstallOptions = {
   rbBinaryPath?: string;
   platform?: NodeJS.Platform;
   registry?: NativeHostRegistry;
+  healthCheck?: (hostPath: string, platform: NativeHostPlatform) => boolean;
 };
 
 export async function extensionInstallCommand(
-  _context: CommandContext,
+  _context: unknown,
   rest: string[],
   options: ExtensionInstallOptions = {}
 ): Promise<ResultEnvelope<ExtensionHostInstallResult>> {
@@ -58,10 +61,36 @@ export async function extensionInstallCommand(
   }
   const targetOptions: { homeDir?: string; platform: NativeHostPlatform; env?: NodeJS.ProcessEnv } = { platform, env };
   if (options.homeDir !== undefined) targetOptions.homeDir = options.homeDir;
-  const manifests = nativeManifestTargets(hostPath, extensionIds, targetOptions).map((target) => {
+  let targets: ExtensionHostManifestResult[];
+  try {
+    targets = nativeManifestTargets(hostPath, extensionIds, targetOptions);
+  } catch (error) {
+    return err(install ? "extension-install-host" : "extension-verify-host", {
+      code: "invalid_arguments",
+      message: error instanceof Error ? error.message : "Invalid native-host extension identity.",
+      hint: "Use an exact browser extension ID; wildcards are not allowed."
+    });
+  }
+  const manifests = targets.map((target) => {
     if (install) writeManifest(target, { platform, registry });
     return { ...target, installed: isManifestInstalled(target, rbBinaryPath, { platform, registry }) };
   });
+  const manifestsInstalled = manifests.every((manifest) => manifest.installed);
+  const healthCheck = options.healthCheck ?? isNativeHostHealthy;
+  const hostHealthy = manifestsInstalled && healthCheck(hostPath, platform);
+  if (!manifestsInstalled || !hostHealthy) {
+    const missing = manifests.filter((manifest) => !manifest.installed).map((manifest) => manifest.browser);
+    return err(install ? "extension-install-host" : "extension-verify-host", {
+      code: "source_unavailable",
+      message: missing.length > 0
+        ? `Native host setup is incomplete for: ${missing.join(", ")}.`
+        : "Native host is installed but did not pass its health check.",
+      hint: install
+        ? "Check filesystem permissions, then retry rb extension install-host."
+        : "Run rb extension install-host, then retry rb extension verify-host.",
+      details: { manifests, hostHealthy }
+    });
+  }
   return ok(install ? "extension-install-host" : "extension-verify-host", { manifests });
 }
 
@@ -78,13 +107,31 @@ export function nativeManifestTargets(
   const homeDir = typeof options === "string" ? options : options.homeDir ?? homedir();
   const platform = typeof options === "string" ? "darwin" : options.platform ?? "darwin";
   const env = typeof options === "string" ? process.env : options.env ?? process.env;
-  return [
+  const chromiumIds = chromiumExtensionIds(ids.chromeExtensionId);
+  const firefoxId = firefoxExtensionId(ids.firefoxExtensionId);
+  const targets: ExtensionHostManifestResult[] = [
     {
       browser: "chrome",
-      manifestPath: chromeManifestPath(homeDir, platform, env),
+      manifestPath: chromiumManifestPath("chrome", homeDir, platform, env),
       hostName: EXTENSION_HOST_NAME,
       binaryPath: hostPath,
-      allowedIds: [ids.chromeExtensionId ?? DEFAULT_CHROME_EXTENSION_ID],
+      allowedIds: chromiumIds,
+      installed: false
+    },
+    ...(platform === "win32" ? [] : [{
+      browser: "chrome-for-testing" as const,
+      manifestPath: chromiumManifestPath("chrome-for-testing", homeDir, platform, env),
+      hostName: EXTENSION_HOST_NAME,
+      binaryPath: hostPath,
+      allowedIds: chromiumIds,
+      installed: false
+    }]),
+    {
+      browser: "edge",
+      manifestPath: chromiumManifestPath("edge", homeDir, platform, env),
+      hostName: EXTENSION_HOST_NAME,
+      binaryPath: hostPath,
+      allowedIds: chromiumIds,
       installed: false
     },
     {
@@ -92,10 +139,11 @@ export function nativeManifestTargets(
       manifestPath: firefoxManifestPath(homeDir, platform, env),
       hostName: EXTENSION_HOST_NAME,
       binaryPath: hostPath,
-      allowedIds: [ids.firefoxExtensionId ?? DEFAULT_FIREFOX_EXTENSION_ID],
+      allowedIds: [firefoxId],
       installed: false
     }
   ];
+  return targets;
 }
 
 export function chromeNativeManifest(target: ExtensionHostManifestResult) {
@@ -119,7 +167,13 @@ export function firefoxNativeManifest(target: ExtensionHostManifestResult) {
 }
 
 export function nativeHostRegistryKey(browser: ExtensionHostManifestResult["browser"]): string {
-  const vendor = browser === "chrome" ? "Google\\Chrome" : "Mozilla";
+  const vendor = browser === "firefox"
+    ? "Mozilla"
+    : browser === "edge"
+      ? "Microsoft\\Edge"
+      : browser === "chrome-for-testing"
+        ? "Google\\Chrome for Testing"
+        : "Google\\Chrome";
   return `HKCU\\Software\\${vendor}\\NativeMessagingHosts\\${EXTENSION_HOST_NAME}`;
 }
 
@@ -131,11 +185,13 @@ export function isManifestInstalled(
   if (target.allowedIds.length === 0) return false;
   if (!existsSync(target.manifestPath) || !existsSync(target.binaryPath)) return false;
   try {
-    if (!statSync(target.binaryPath).isFile()) return false;
+    const binaryStat = statSync(target.binaryPath);
+    if (!binaryStat.isFile()) return false;
     const platform = options.platform ?? platformForPaths();
+    if (platform !== "win32" && (binaryStat.mode & 0o111) === 0) return false;
     if (rbBinaryPath !== undefined && !hostMatchesBinary(target.binaryPath, rbBinaryPath, platform)) return false;
     if (platform === "win32" && options.registry?.readDefaultValue(nativeHostRegistryKey(target.browser)) !== target.manifestPath) return false;
-    const expected = target.browser === "chrome" ? chromeNativeManifest(target) : firefoxNativeManifest(target);
+    const expected = target.browser === "firefox" ? firefoxNativeManifest(target) : chromeNativeManifest(target);
     const actual = JSON.parse(readFileSync(target.manifestPath, "utf8"));
     return JSON.stringify(actual) === JSON.stringify(expected);
   } catch {
@@ -149,7 +205,7 @@ function writeManifest(
 ): void {
   if (target.allowedIds.length === 0) return;
   mkdirSync(directoryName(target.manifestPath, options.platform), { recursive: true });
-  const manifest = target.browser === "chrome" ? chromeNativeManifest(target) : firefoxNativeManifest(target);
+  const manifest = target.browser === "firefox" ? firefoxNativeManifest(target) : chromeNativeManifest(target);
   assertNoWildcards(manifest);
   writeFileSync(target.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o644 });
   if (options.platform === "win32") options.registry.writeDefaultValue(nativeHostRegistryKey(target.browser), target.manifestPath);
@@ -178,10 +234,21 @@ function hostMatchesBinary(hostPath: string, rbBinaryPath: string, platform: Nat
   return readFileSync(hostPath, "utf8") === hostWrapperScript(rbBinaryPath);
 }
 
-function chromeManifestPath(homeDir: string, platform: NativeHostPlatform, env: NodeJS.ProcessEnv): string {
-  if (platform === "linux") return join(homeDir, ".config/google-chrome/NativeMessagingHosts", `${EXTENSION_HOST_NAME}.json`);
-  if (platform === "win32") return win32.join(windowsDataDir(homeDir, env), "NativeMessagingHosts", `${EXTENSION_HOST_NAME}.chrome.json`);
-  return join(homeDir, "Library/Application Support/Google/Chrome/NativeMessagingHosts", `${EXTENSION_HOST_NAME}.json`);
+function chromiumManifestPath(
+  browser: "chrome" | "chrome-for-testing" | "edge",
+  homeDir: string,
+  platform: NativeHostPlatform,
+  env: NodeJS.ProcessEnv
+): string {
+  if (platform === "win32") {
+    return win32.join(windowsDataDir(homeDir, env), "NativeMessagingHosts", `${EXTENSION_HOST_NAME}.${browser}.json`);
+  }
+  if (platform === "linux") {
+    const browserDir = browser === "edge" ? "microsoft-edge" : browser === "chrome-for-testing" ? "google-chrome-for-testing" : "google-chrome";
+    return join(homeDir, `.config/${browserDir}/NativeMessagingHosts`, `${EXTENSION_HOST_NAME}.json`);
+  }
+  const browserDir = browser === "edge" ? "Microsoft Edge" : browser === "chrome-for-testing" ? "Google/Chrome for Testing" : "Google/Chrome";
+  return join(homeDir, `Library/Application Support/${browserDir}/NativeMessagingHosts`, `${EXTENSION_HOST_NAME}.json`);
 }
 
 function firefoxManifestPath(homeDir: string, platform: NativeHostPlatform, env: NodeJS.ProcessEnv): string {
@@ -217,6 +284,55 @@ function resolveBinaryPath(candidate: string): string {
 function assertNoWildcards(manifest: unknown): void {
   const text = JSON.stringify(manifest);
   if (text.includes("*")) throw new Error("Native messaging manifest allowlists must not use wildcards.");
+}
+
+function chromiumExtensionIds(customId?: string): string[] {
+  const ids = [CHROME_STORE_EXTENSION_ID, EDGE_STORE_EXTENSION_ID, DEFAULT_CHROME_EXTENSION_ID];
+  if (customId !== undefined) ids.push(customId);
+  for (const id of ids) {
+    if (!/^[a-p]{32}$/.test(id)) throw new Error(`Invalid Chromium extension ID '${id}'.`);
+  }
+  return [...new Set(ids)];
+}
+
+export function isNativeHostHealthy(hostPath: string, _platform: NativeHostPlatform = platformForPaths()): boolean {
+  try {
+    const result = Bun.spawnSync([hostPath], {
+      stdin: encodeNativeMessage({ type: "health", protocolVersion: 1 }),
+      stdout: "pipe",
+      stderr: "pipe",
+      env: { ...process.env, RECALLBASE_DB: ":memory:" },
+      timeout: 5_000,
+      maxBuffer: 1024 * 1024
+    });
+    if (!result.success) return false;
+    const response = decodeNativeResponse(result.stdout);
+    return isRecord(response)
+      && response.ok === true
+      && response.type === "health"
+      && response.protocolVersion === 1
+      && typeof response.version === "string"
+      && response.version.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+function firefoxExtensionId(customId?: string): string {
+  const id = customId ?? DEFAULT_FIREFOX_EXTENSION_ID;
+  if (!id.trim() || id.includes("*")) throw new Error(`Invalid Firefox extension ID '${id}'.`);
+  return id;
+}
+
+function decodeNativeResponse(bytes: Uint8Array): unknown {
+  if (bytes.byteLength < 4) throw new Error("Native response is missing a length prefix.");
+  const length = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0, true);
+  if (length > 1024 * 1024 || bytes.byteLength !== length + 4) throw new Error("Invalid native response length.");
+  return JSON.parse(new TextDecoder().decode(bytes.slice(4)));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
 class WindowsRegistry implements NativeHostRegistry {
