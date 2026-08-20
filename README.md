@@ -1,7 +1,6 @@
 # RecallBase
 
-> Your AI agents forget everything when you close the terminal.
-> RecallBase fixes that — locally, instantly, across every tool you use.
+> Give any AI agent instant access to your conversation history—across agents and web AI, all stored locally.
 
 [![npm](https://img.shields.io/npm/v/recallbase)](https://www.npmjs.com/package/recallbase)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/ai-chat-exporter-archive/fapgpimjelmfedlapidmfljcpmenmjeb)
@@ -122,6 +121,20 @@ Add RecallBase as an MCP server to any agent that supports it — Cursor, Claude
 ```
 
 The agent gains four tools: `today`, `search`, `open`, and `sources`. The MCP server starts in milliseconds, has no external dependencies, and runs entirely locally — no API key, no rate limits.
+
+### Agent Skill
+
+The portable Agent Skills package lives in [`agent/recallbase/`](agent/recallbase/). Install it globally with the [`skills` CLI](https://github.com/vercel-labs/skills) so RecallBase is available across projects:
+
+```bash
+npx skills add DarinRowe/RecallBase --global
+```
+
+Update the global installation later with:
+
+```bash
+npx skills update recallbase --global
+```
 
 ---
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdtempSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { runCommand } from "../../apps/cli/src/cli";
 
@@ -18,9 +18,17 @@ describe("Agent access", () => {
     const search = JSON.parse((await runCommand(["search", "fixture coverage", "--json", "--db", dbPath])).stdout);
     const opened = JSON.parse((await runCommand(["open", search.data.results[0].id, "--json", "--db", dbPath])).stdout);
 
+    const skillRoot = resolve("agent/recallbase");
+    const skillPath = resolve(skillRoot, "SKILL.md");
+    const linkedFiles = [...skill.matchAll(/\]\(([^)]+\.md)\)/g)]
+      .map((match) => resolve(dirname(skillPath), match[1]!));
+
     expect(skill).toContain("rb today --json");
-    expect(skill).toContain("concise natural-language summary");
-    expect(skill).toContain("Do not answer a `today` request by only listing conversation IDs");
+    expect(skill).toContain("rb search \"<specific query>\" --json");
+    expect(skill).toContain("rb open <conversation-id> --json");
+    expect(linkedFiles.length).toBeGreaterThan(0);
+    expect(linkedFiles.every(existsSync)).toBe(true);
+    expect(existsSync(resolve(skillRoot, "agents/openai.yaml"))).toBe(true);
     expect(agents).toContain("When CLI commands, JSON shapes, or command semantics change");
     expect(agents).toContain("update `agent/recallbase/SKILL.md` accordingly");
     expect(sources.data.sources.some((source: { health: string }) => source.health === "healthy" || source.health === "partial")).toBe(true);
