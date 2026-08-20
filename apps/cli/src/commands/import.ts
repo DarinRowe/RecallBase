@@ -3,7 +3,9 @@ import type { CommandContext } from "./shared";
 
 export async function importCommand(context: CommandContext): Promise<ResultEnvelope<ImportResult>> {
   const { importKnownSources } = await import("@recallbase/importers");
-  const options: NonNullable<Parameters<typeof importKnownSources>[1]> = {};
+  const options: NonNullable<Parameters<typeof importKnownSources>[1]> = {
+    skipUnchanged: !context.flags.force
+  };
   if (context.flags.roots.length > 0) options.roots = context.flags.roots;
   if (context.flags.sourceIds.length > 0) options.sourceIds = context.flags.sourceIds;
   if (!context.flags.json) {
