@@ -6,9 +6,9 @@
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/ai-chat-exporter-archive/fapgpimjelmfedlapidmfljcpmenmjeb)
 [![CI](https://img.shields.io/github/actions/workflow/status/DarinRowe/RecallBase/ci.yml?label=CI)](https://github.com/DarinRowe/RecallBase/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![macOS · Linux · Windows](https://img.shields.io/badge/platform-macOS%20·%20Linux%20·%20Windows-blue)](#install)
+[![macOS · Linux · Windows](https://img.shields.io/badge/platform-macOS%20·%20Linux%20·%20Windows-blue)](https://recallbase.net/docs/install-cli/)
 
-[Product](https://recallbase.net/desktop-cli/) · [Install docs](https://recallbase.net/docs/install-cli/) · [Developer resources](https://recallbase.net/developers/) · [Contributing](CONTRIBUTING.md)
+[Product](https://recallbase.net/desktop-cli/) · [Install the CLI](https://recallbase.net/docs/install-cli/) · [Developer resources](https://recallbase.net/developers/) · [Contributing](CONTRIBUTING.md)
 
 > **Your data stays local.** No account required. Raw transcripts never leave your machine. [Full privacy details →](#privacy)
 
@@ -16,16 +16,28 @@
 
 ---
 
-## Get Started in 60 Seconds
+## Install
+
+**[Read the complete CLI installation guide →](https://recallbase.net/docs/install-cli/)**
+
+### Requirements
+
+- Node.js 22 or newer, with npm, for the recommended npm installation
+- macOS, Linux, or Windows
+
+The local CLI does not require a RecallBase account or cloud service.
+
+### Get Started in 60 Seconds
 
 ```bash
 npm install -g recallbase
 
+rb --help    # verify the installation
 rb import    # scan all known local sources
 rb today     # what did you work on today?
 ```
 
-That's it. No login, no config, no cloud.
+That's it. No login, no config, no cloud. For alternative installation methods, `PATH` setup, and troubleshooting, use the [installation guide](https://recallbase.net/docs/install-cli/).
 
 ---
 
@@ -158,31 +170,8 @@ The browser extension captures conversations from web AI tools. It can quick-exp
 |    ✓    |   ✓    |   ✓    |    ✓     |  ✓   |     ✓      |
 
 | Kimi | Qwen | Doubao | Tencent Yuanbao | NotebookLM | Google AI Studio | GitHub Copilot | Microsoft Copilot |
-| :--: | :---------: | :-----------: | :------------------------: | :--------: | :--------------: | :------------: | :---------------: |
-|  ✓   |      ✓      |       ✓       |             ✓              |     ✓      |        ✓         |       ✓        |         ✓         |
-
-## Install
-
-**npm:**
-
-```bash
-npm install -g recallbase
-```
-
-**Linux installer:**
-
-```bash
-curl -fsSL https://github.com/DarinRowe/RecallBase/releases/latest/download/install-linux.sh | bash
-```
-
-The installer supports x86_64 and ARM64 glibc distributions, verifies the release checksum, and installs `rb` to `~/.local/bin` by default. Pin a release with `curl -fsSL https://github.com/DarinRowe/RecallBase/releases/latest/download/install-linux.sh | env RB_VERSION=v0.1.3 bash`.
-
-**Direct download:**
-Download `recallbase-<platform>-<version>.tar.gz` from the [latest GitHub Release](https://github.com/DarinRowe/RecallBase/releases), extract, and put `rb` on your `PATH`.
-
-Homebrew distribution is not public yet; use npm or a release binary until an official tap is available.
-
----
+| :--: | :--: | :----: | :-------------: | :--------: | :--------------: | :------------: | :---------------: |
+|  ✓   |  ✓   |   ✓    |        ✓        |     ✓      |        ✓         |       ✓        |         ✓         |
 
 ## Privacy
 
@@ -194,11 +183,13 @@ RecallBase is **local-first by design**:
 
 ---
 
-## Browser Extension Setup
+## Optional: Archive Web AI Chats
 
-[Install the RecallBase browser extension from the Chrome Web Store →](https://chromewebstore.google.com/detail/ai-chat-exporter-archive/fapgpimjelmfedlapidmfljcpmenmjeb)
+[Install the browser extension →](https://recallbase.net/docs/install-browser-extension/)
 
-The browser extension source and browser packages live in a sibling project. This CLI project owns the local native messaging host used by that extension.
+The browser extension is a separate, optional product surface for saving conversations from supported web AI apps. Its installation and browser-specific setup live in the website documentation so they stay current without duplicating them here.
+
+To make extension captures available to the local CLI and agents, install and verify the native messaging host once:
 
 ```bash
 # Install the native messaging host (required once)
@@ -206,9 +197,7 @@ rb extension install-host
 rb extension verify-host
 ```
 
-`install-host` writes per-user manifests for Chrome, Chrome for Testing (macOS/Linux), Microsoft Edge, and Firefox, then starts the host with an in-memory database to verify the native messaging protocol. The Chromium manifests allow the published Chrome and Edge IDs plus the stable development ID. `RECALLBASE_CHROME_EXTENSION_ID` adds an exact alternate Chromium ID; `RECALLBASE_FIREFOX_EXTENSION_ID` replaces the default Firefox add-on ID for alternate or development builds. `verify-host` is read-only and exits nonzero when a manifest, executable wrapper, registry entry, or host health check fails.
-
-The native messaging host is only required for RecallBase import and agent access. Markdown download and Obsidian handoff work from the extension UI without installing the CLI.
+The native messaging host is only required for RecallBase import and agent access. For CLI installation and general troubleshooting, see the [CLI installation guide](https://recallbase.net/docs/install-cli/).
 
 ---
 
