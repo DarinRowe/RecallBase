@@ -1,46 +1,40 @@
 ---
 name: recallbase
-description: Use RecallBase CLI JSON to answer questions about prior AI work history and recover useful context before continuing work.
+description: Recover context from local AI conversation history with RecallBase. Use for same-day work summaries, resuming prior AI or coding sessions, or tracing a past decision to its source.
+license: MIT
+metadata:
+  author: Darin Rowe
 ---
 
-# RecallBase Agent Usage
+# RecallBase
 
-Use RecallBase when the user asks what happened earlier, what they worked on today, where a prior decision came from, or when current work depends on earlier AI/coding sessions.
+Recover the smallest useful slice of local AI history, then answer the user's question in natural language.
 
-RecallBase is for end-user memory recovery. Your answer should be useful to a regular customer, not a raw database report.
+This workflow requires the local `rb` CLI on `PATH` and a RecallBase store populated from supported local sources. Core retrieval runs locally without login or network access.
 
-Prefer compact JSON commands:
+## Retrieve
 
-```bash
-rb sources --json
-rb today --json
-rb search "error message or feature name" --json
-rb open <conversation-id> --json
-```
+1. Choose the narrowest entry point:
+   - Same-day continuity: `rb today --json`
+   - A known topic, error, file, branch, command, or decision: `rb search "<specific query>" --json`
+   - Suspected coverage gaps: `rb sources --json`
+2. Inspect the JSON envelope. Continue only from `ok: true`; for `ok: false`, use `error.code`, `message`, and `hint` to explain or recover.
+3. Open only the strongest candidate conversations with `rb open <conversation-id> --json`. Search results also provide the stable reference `recallbase:conversation/<id>`.
 
-Native-host setup: `rb extension install-host` installs Chrome, Chrome for Testing (macOS/Linux), Edge, and Firefox manifests and verifies the host protocol. `rb extension verify-host` is read-only and exits nonzero for missing, stale, non-executable, or unhealthy setup. Defaults include the published Chrome/Edge identities, the stable Chromium development identity, and Firefox add-on ID `recallbase-capture@recallbase.net`. `RECALLBASE_CHROME_EXTENSION_ID` adds an exact alternate Chromium ID; `RECALLBASE_FIREFOX_EXTENSION_ID` replaces the Firefox default.
+Retrieval is complete when the evidence answers the question or the available source coverage proves the relevant history is absent or incomplete.
 
-Use `rb --version` when diagnosing an installation or confirming which local release is active.
+Use an already-configured local RecallBase MCP instead of shell commands when it is available. Read [references/mcp.md](references/mcp.md) for MCP routing. The public RecallBase Docs MCP contains product documentation; personal history tools come only from the local `rb mcp` server.
 
-Guidelines:
+## Synthesize
 
-- Start with `rb today --json` when the user asks "what did I do today?", "today", "what happened earlier today?", or wants same-day continuity.
-- For `today`, answer with a concise natural-language summary of what the user worked on. Group sessions into themes, mention concrete tasks and outcomes, and only include IDs or `rb open ...` commands as optional follow-up references.
-- Do not answer a `today` request by only listing conversation IDs, session IDs, or continuation hints. IDs are internal handles; the user asked what happened.
-- Use `rb search --json` for a specific bug, feature, branch, file, command, or error. Search results include a `uri` field (`recallbase:conversation/<id>`) as a stable reference for both agents and supporting terminals.
-- Use `rb open --json` only for the few conversations needed to understand details behind a `today` or `search` result. Summarize the relevant messages instead of dumping full transcripts.
-- `rb open --json` message objects can include optional `thinking` for platform-visible reasoning blocks and optional lightweight metadata (`modelId`, `upstreamIds`, `attachments`, `citations`, `media`) from browser API captures. Attachment/media URLs are sanitized and may omit token-like query details. Treat `thinking` as separate from `text`; use metadata as context, not as a replacement for message content.
-- Check `rb sources --json` when results seem incomplete.
-- Local RecallBase commands do not require login or network access.
-- Local CLI imports are message-first. A source can be healthy with `rawEvidence: 0`; use conversations and messages as the primary signal.
+- Answer the request directly. For a daily recap, group work into themes and name concrete tasks, outcomes, decisions, tests, merged changes, and visible next steps.
+- Treat conversation IDs and `rb open ...` commands as optional follow-up references, not the answer.
+- Summarize the relevant messages instead of reproducing full transcripts or raw JSON.
+- State material coverage gaps when sources are absent, partial, failed, or stale. When no evidence supports a claim, say so.
 
-When answering users:
+The response is complete when every material claim is grounded in retrieved history, uncertainty is explicit, and the user can continue without reading command output.
 
-- Prefer "You worked on..." / "The main threads were..." phrasing.
-- Include decisions, fixes, tests, merged PRs, or next steps when they are visible in the returned data.
-- Say when results may be incomplete because sources are absent, partial, or not recently imported.
-- Keep command output and JSON out of the final answer unless the user explicitly asks for raw data.
+## Conditional references
 
-## Local MCP
-
-`rb mcp` exposes the same `today`, `search`, `open`, and `sources` query layer over the MCP `2024-11-05` stdio profile. Treat a tool result with `isError: true` as a failed RecallBase query and read the embedded envelope's `error.code`, `message`, and optional `hint`.
+- Read [references/results.md](references/results.md) when interpreting unfamiliar fields or building against the JSON contract.
+- Read [references/troubleshooting.md](references/troubleshooting.md) when `rb` is unavailable, retrieval is empty or incomplete, imports fail, or browser capture setup is unhealthy.
