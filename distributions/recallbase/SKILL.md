@@ -10,7 +10,7 @@ metadata:
 
 Recover the smallest useful slice of local AI history, then answer the user's question in natural language.
 
-This workflow requires the local `rb` CLI on `PATH` and a RecallBase store populated from supported local sources, including Pi's local session history. Core retrieval runs locally without login or network access.
+This workflow requires the local `rb` CLI on `PATH` and a RecallBase store populated from supported local sources, including Cursor Desktop and Agent CLI history. Core retrieval runs locally without login or network access.
 
 ## Retrieve
 
@@ -123,6 +123,8 @@ Read this file when the CLI is unavailable, results are empty or incomplete, imp
 2. Run `rb sources --json` and inspect health, counts, import times, and diagnostics.
 3. Run `rb import --json` when known local sources have not been imported. It skips unchanged sources; use `rb import --force --json` only when a full re-import is required. `today` and non-empty `search` queries normally refresh known default sources automatically; explicit database paths, explicit roots, and `--no-refresh` suppress that refresh.
 4. Retry the narrow query. Stop when results are available or the source status identifies the missing coverage.
+
+For Cursor, the source ID is `cursor` and the default data root is `~/.cursor/projects/`. RecallBase reads only main files matching `*/agent-transcripts/<conversation-id>/<conversation-id>.jsonl`, deduplicates repeated conversation IDs, and excludes `subagents/`, thinking, tools, status/error records, terminal/file content, opaque CLI blobs, Desktop application state, derived search indexes, and cloud/background history. Automatic coverage is currently verified on macOS Cursor Desktop 3.15.6 and Agent CLI 2026.08.04; a `cursor_transcript_invalid` or `cursor_schema_unknown` diagnostic means the observed internal transcript schema needs compatibility review. For another verified transcript root or one exact main transcript, run `rb import --source cursor --root <path> --json`.
 
 For Kimi Code, the source ID is `kimi-code` and the default data root is `~/.kimi-code/` (or `$KIMI_CODE_HOME`). RecallBase reads `sessions/*/*/state.json` and `sessions/*/*/agents/main/wire.jsonl`; it does not use the legacy `~/.kimi/` tree. It indexes the user-visible main-agent conversation and excludes private thinking, tool payloads, subagent streams, and internal injections.
 

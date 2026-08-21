@@ -4,6 +4,7 @@ import { createClaudeCodeImporter } from "./claude-code/importer";
 import { createClaudeWebImporter } from "./claude-web/importer";
 import { createCodexImporter } from "./codex/importer";
 import { createCopilotImporter } from "./copilot/importer";
+import { createCursorImporter } from "./cursor/importer";
 import { importWithRegistry, type ImportKnownSourcesOptions, type SourceImporter } from "./common/importer";
 import { createGrokBuildImporter } from "./grok-build/importer";
 import { createKimiCodeImporter } from "./kimi-code/importer";
@@ -20,6 +21,7 @@ export { createClaudeCodeImporter } from "./claude-code/importer";
 export { createClaudeWebImporter } from "./claude-web/importer";
 export { createCodexImporter } from "./codex/importer";
 export { createCopilotImporter } from "./copilot/importer";
+export { createCursorImporter } from "./cursor/importer";
 export { createGrokBuildImporter } from "./grok-build/importer";
 export { createKimiCodeImporter } from "./kimi-code/importer";
 export { createOpenCodeImporter } from "./opencode/importer";
@@ -31,6 +33,7 @@ export function getDefaultImporters(): SourceImporter[] {
     createClaudeCodeImporter(),
     createClaudeWebImporter(),
     createCopilotImporter(),
+    createCursorImporter(),
     createGrokBuildImporter(),
     createKimiCodeImporter(),
     createOpenCodeImporter(),

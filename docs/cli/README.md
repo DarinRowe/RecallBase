@@ -6,7 +6,7 @@ The local CLI imports, searches, opens, backs up, and exposes RecallBase data to
 
 - Entry point: `apps/cli/src/cli.ts`
 - Commands: `apps/cli/src/commands/*`
-- Local importers: Codex CLI and Codex in the ChatGPT desktop app, Claude Code, Claude Web exports, GitHub Copilot, Grok Build, Kimi Code, OpenCode, and Pi under `packages/importers/src/*`
+- Local importers: Codex CLI and Codex in the ChatGPT desktop app, Claude Code, Claude Web exports, Cursor Desktop and Agent CLI, GitHub Copilot, Grok Build, Kimi Code, OpenCode, and Pi under `packages/importers/src/*`
 - Native browser bridge: `apps/cli/src/commands/extension-host.ts`
 - Native host install/verify: `apps/cli/src/commands/extension-install.ts`
 - MCP server: `apps/cli/src/mcp/*`
@@ -32,6 +32,12 @@ Search normalizes result limits to 10 by default and 50 at most for both CLI and
 The `codex` source supports OpenAI Codex CLI and Codex tasks created in the [ChatGPT desktop app](https://developers.openai.com/). OpenAI now distributes the desktop experience as ChatGPT, with Codex integrated as its coding agent. These Codex surfaces use the local JSONL sessions under `~/.codex/sessions/` and `~/.codex/archived_sessions/`, so RecallBase imports them through one source adapter. It also reads `history.jsonl` and `session_index.jsonl` when present to recover user-facing task titles.
 
 RecallBase imports user, assistant, system, and tool messages. Runtime-only records without importable messages are skipped and reported through bounded diagnostics.
+
+## Cursor Import Boundary
+
+The `cursor` source covers current Cursor Desktop and Cursor Agent CLI chats through one adapter. On the macOS versions verified in `cursor-import-research.md`, both surfaces materialize main-agent JSONL transcripts under `~/.cursor/projects/*/agent-transcripts/<conversation-id>/<conversation-id>.jsonl`. Cursor officially exposes the transcript path and stable conversation ID to Hooks v1, but does not publish the file's content schema, so the importer is experimental and probes it tolerantly.
+
+RecallBase streams each file only to its initial size, imports direct user/assistant `text` blocks, deduplicates replicated conversation UUIDs, and skips subagent transcripts. Tool calls and results, thinking, status/error records, terminal output, file contents, opaque CLI blobs, Desktop application state, derived search indexes, and cloud/background-agent data are excluded. A trailing incomplete record preserves the complete prefix; malformed interior message data skips only that transcript and produces bounded path-free diagnostics.
 
 ## Grok Build Import Boundary
 

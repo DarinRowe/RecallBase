@@ -2,6 +2,8 @@
 
 RecallBase V1 is local-first. Import, search, today, open, sources, and backup run entirely on your device without login or network access.
 
+The Cursor local importer reads only main-agent transcripts from the current shared Cursor Desktop/Agent CLI project layout. It indexes direct user and assistant text, but does not index thinking, tool payloads or results, subagent transcripts, status/error records, terminal output, file contents, Desktop application state, derived search indexes, cloud-cache data, or credentials.
+
 The Kimi Code local importer reads only main-agent session state and wire records. It indexes user-visible prompts and assistant-visible text, but does not index private thinking, tool payloads or results, subagent streams, system prompts, logs, tasks, or credentials.
 
 The Grok Build local importer reads only `summary.json` metadata and the authoritative ACP `updates.jsonl` session stream. It indexes user-visible prompts and assistant-visible text, but does not index thought chunks, tool payloads or results, hooks, plans, tasks, system prompts, file snapshots, search indexes, or credentials.
