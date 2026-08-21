@@ -29,6 +29,12 @@ export function defaultArgv(argv = Bun.argv): string[] {
   return argv.slice(2);
 }
 
+export function isCliEntrypoint(importMetaMain: boolean, importMetaPath: string): boolean {
+  if (importMetaMain) return true;
+  const normalized = importMetaPath.replaceAll("\\", "/");
+  return normalized.includes("/$bunfs/") || /^[a-z]:\/~bun\//i.test(normalized);
+}
+
 export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = process.env): Promise<RunResult> {
   const { command, rest, flags } = parseFlags(argv, env);
   if (command === "help" || command === "--help" || command === "-h") {
@@ -120,6 +126,6 @@ function commandHelp(command?: string): string {
   return "RecallBase commands: import, today, search, open, sources, backup, extension, extension-host, mcp, version\nRun rb <command> --help for usage.\n";
 }
 
-if (import.meta.main) {
+if (isCliEntrypoint(import.meta.main, import.meta.path)) {
   process.exit(await main());
 }
