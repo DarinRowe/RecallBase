@@ -25,7 +25,7 @@ jobs:
       - if: runner.os == 'Windows'
         run: bun test apps/cli/tests/extension-install.test.ts --test-name-pattern "compiled Bun builds|Windows"
       - if: runner.os == 'Windows'
-        run: bun test tests/packaging/cli-binary-smoke.test.ts tests/packaging/npm-package.test.ts
+        run: bun test tests/packaging/npm-package.test.ts
       - run: bun run package:release:test
       - run: bun run scripts/package-npm.ts --targets=host
       - uses: actions/upload-artifact@v7

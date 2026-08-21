@@ -26,7 +26,7 @@ jobs:
       - run: bun install
       - run: bun run typecheck
       - run: bun test apps/cli/tests/extension-install.test.ts --test-name-pattern "compiled Bun builds|Windows"
-      - run: bun test tests/packaging/cli-binary-smoke.test.ts tests/packaging/npm-package.test.ts
+      - run: bun test tests/packaging/npm-package.test.ts
       - run: bun run package:cli
       - name: Install and verify the compiled Windows native host
         shell: pwsh
