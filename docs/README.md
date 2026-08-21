@@ -9,6 +9,7 @@ Use this as the first stop for CLI, local database, and agent integration work.
 ## Engineering
 
 - CLI entry points: `cli/README.md`
+- Cursor official interfaces and local import: `cli/cursor-import-research.md`
 - Grok official interfaces and local import: `cli/grok-import-research.md`
 - Pi official interfaces and local import: `cli/pi-import-research.md`
 - Release platforms: `release/platforms.md`

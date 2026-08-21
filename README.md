@@ -159,6 +159,7 @@ npx skills update recallbase --global
 | ------------------------------- | ------------ |
 | OpenAI Codex CLI + ChatGPT app | ✅ Core      |
 | Claude Code                     | ✅ Core      |
+| Cursor Desktop + Agent CLI      | ✅ Supported |
 | GitHub Copilot                  | ✅ Supported |
 | Grok Build                      | ✅ Supported |
 | Kimi Code                       | ✅ Supported |
