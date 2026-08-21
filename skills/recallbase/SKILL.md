@@ -10,7 +10,7 @@ metadata:
 
 Recover the smallest useful slice of local AI history, then answer the user's question in natural language.
 
-This workflow requires the local `rb` CLI on `PATH` and a RecallBase store populated from supported local sources. Core retrieval runs locally without login or network access.
+This workflow requires the local `rb` CLI on `PATH` and a RecallBase store populated from supported local sources, including Pi's local session history. Core retrieval runs locally without login or network access.
 
 ## Retrieve
 

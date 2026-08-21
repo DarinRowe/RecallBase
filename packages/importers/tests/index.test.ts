@@ -18,7 +18,8 @@ describe("importer registry", () => {
       "copilot",
       "grok-build",
       "kimi-code",
-      "opencode"
+      "opencode",
+      "pi"
     ]);
   });
 
@@ -35,11 +36,11 @@ describe("importer registry", () => {
         }
       });
 
-      expect(result.sources.map((source) => source.source.id)).toEqual(["codex", "claude-code", "claude-web", "copilot", "grok-build", "kimi-code", "opencode"]);
-      expect(result.totals.conversations).toBe(9);
+      expect(result.sources.map((source) => source.source.id)).toEqual(["codex", "claude-code", "claude-web", "copilot", "grok-build", "kimi-code", "opencode", "pi"]);
+      expect(result.totals.conversations).toBe(10);
       expect(result.totals.rawEvidence).toBe(0);
       expect(progress.some((message) => message.includes("Importing Codex"))).toBe(true);
-      expect(db.sources().map((source) => source.id)).toEqual(["claude-code", "claude-web", "codex", "copilot", "grok-build", "kimi-code", "opencode"]);
+      expect(db.sources().map((source) => source.id)).toEqual(["claude-code", "claude-web", "codex", "copilot", "grok-build", "kimi-code", "opencode", "pi"]);
       expect(db.search("RecallBase").length).toBeGreaterThan(0);
     } finally {
       await rm(dir, { recursive: true, force: true });

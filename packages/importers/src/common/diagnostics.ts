@@ -32,7 +32,8 @@ const SUMMARY_CODES = new Set([
   "copilot_response_unmapped",
   "grok_build_no_messages",
   "kimi_code_no_messages",
-  "opencode_no_messages"
+  "opencode_no_messages",
+  "pi_no_messages"
 ]);
 
 export function summarizeDiagnostics(diagnostics: Diagnostic[] | undefined): Diagnostic[] | undefined {

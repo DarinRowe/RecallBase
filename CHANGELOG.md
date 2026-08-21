@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-08-21
+
+### Added
+
+- Added local Pi session import for released v1-v3 JSONL histories with active-branch reconstruction, incremental updates, and official path overrides.
+- Added first-party Pi interface research, sanitized fixtures, legacy format coverage, explicit leaf handling, and diagnostics for the incompatible unreleased v4 schema.
+
+### Security
+
+- Pi imports exclude reasoning, tools, shell output, summaries, abandoned branches, and extension messages; file inputs and images are reduced to safe placeholders.
+
 ## [0.1.6] - 2026-08-20
 
 ### Fixed
@@ -54,7 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MCP server exposing `today`, `search`, `open`, and `sources` tools.
 - Browser extension native messaging host support.
 
-[Unreleased]: https://github.com/DarinRowe/RecallBase/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/DarinRowe/RecallBase/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/DarinRowe/RecallBase/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/DarinRowe/RecallBase/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/DarinRowe/RecallBase/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/DarinRowe/RecallBase/compare/v0.1.3...v0.1.4

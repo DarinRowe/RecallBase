@@ -1,7 +1,7 @@
 {
   "name": "recallbase",
   "displayName": "RecallBase",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Recover context from local AI conversation history through the local RecallBase CLI.",
   "author": {
     "name": "Darin Rowe",
