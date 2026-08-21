@@ -1,7 +1,9 @@
+import { createReadStream } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { createInterface } from "node:readline";
 import type { Diagnostic } from "@recallbase/contracts";
 import { fileUri } from "./discovery";
-import { malformedJsonlDiagnostic } from "./diagnostics";
+import { diagnostic, malformedJsonlDiagnostic } from "./diagnostics";
 
 export interface JsonlRecord {
   value: Record<string, unknown>;
@@ -13,6 +15,11 @@ export interface JsonlRecord {
 export interface JsonlReadResult {
   records: JsonlRecord[];
   diagnostics: Diagnostic[];
+}
+
+export interface StreamJsonlOptions {
+  trailingIncompleteCode: string;
+  trailingIncompleteMessage: string;
 }
 
 export async function readJsonl(path: string, sourceId: string): Promise<JsonlReadResult> {
@@ -38,6 +45,57 @@ export async function readJsonl(path: string, sourceId: string): Promise<JsonlRe
   });
 
   return { records, diagnostics };
+}
+
+export async function streamJsonl(
+  path: string,
+  sourceId: string,
+  onRecord: (record: JsonlRecord) => void,
+  options: StreamJsonlOptions
+): Promise<Diagnostic[]> {
+  const input = createReadStream(path, { encoding: "utf8" });
+  const lines = createInterface({ input, crlfDelay: Infinity });
+  const diagnostics: Diagnostic[] = [];
+  let lineNumber = 0;
+  let pendingMalformed: { line: number; error: unknown } | undefined;
+
+  for await (const line of lines) {
+    lineNumber += 1;
+    if (!line.trim()) continue;
+    if (pendingMalformed) {
+      diagnostics.push(
+        malformedJsonlDiagnostic(sourceId, fileUri(path, `#L${pendingMalformed.line}`), pendingMalformed.error)
+      );
+      pendingMalformed = undefined;
+    }
+    let value: unknown;
+    try {
+      value = JSON.parse(line) as unknown;
+      if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("JSONL record must be an object");
+    } catch (error) {
+      pendingMalformed = { line: lineNumber, error };
+      continue;
+    }
+    onRecord({
+      value: value as Record<string, unknown>,
+      raw: line,
+      line: lineNumber,
+      uri: fileUri(path, `#L${lineNumber}`)
+    });
+  }
+
+  if (pendingMalformed) {
+    diagnostics.push(
+      diagnostic(
+        sourceId,
+        "info",
+        options.trailingIncompleteCode,
+        options.trailingIncompleteMessage,
+        fileUri(path, `#L${pendingMalformed.line}`)
+      )
+    );
+  }
+  return diagnostics;
 }
 
 export async function readJsonObject(path: string): Promise<{ value: Record<string, unknown>; raw: string }> {

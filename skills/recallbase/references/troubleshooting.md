@@ -11,6 +11,8 @@ Read this file when the CLI is unavailable, results are empty or incomplete, imp
 
 For Kimi Code, the source ID is `kimi-code` and the default data root is `~/.kimi-code/` (or `$KIMI_CODE_HOME`). RecallBase reads `sessions/*/*/state.json` and `sessions/*/*/agents/main/wire.jsonl`; it does not use the legacy `~/.kimi/` tree. It indexes the user-visible main-agent conversation and excludes private thinking, tool payloads, subagent streams, and internal injections.
 
+For Grok Build, the source ID is `grok-build` and the default data root is `~/.grok/` (or `$GROK_HOME`). RecallBase reads `sessions/*/*/summary.json` and the authoritative `sessions/*/*/updates.jsonl` stream. It indexes user-visible user/agent message chunks and excludes thoughts, tool payloads, hooks, plans, tasks, system prompts, file snapshots, and derived search indexes.
+
 If `rb` is not installed, report that prerequisite. Install it only within the user's authorization; the standard package command is `npm install -g recallbase`.
 
 ## Browser capture
