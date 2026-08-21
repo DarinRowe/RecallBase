@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { chmodSync, mkdtempSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import {
   DEFAULT_FIREFOX_EXTENSION_ID,
   DEFAULT_CHROME_EXTENSION_ID,
@@ -9,10 +9,11 @@ import {
   extensionInstallCommand,
   firefoxNativeManifest,
   isManifestInstalled,
+  isNativeHostHealthy,
   nativeHostRegistryKey,
   nativeHostWrapperPath,
   nativeManifestTargets,
-  resolveHostBinaryPath
+  resolveNativeHostLaunch
 } from "../src/commands/extension-install";
 
 class MemoryRegistry {
@@ -84,7 +85,7 @@ describe("extension native host install manifests", () => {
     const install = await extensionInstallCommand({} as Parameters<typeof extensionInstallCommand>[0], ["install-host"], {
       homeDir,
       env,
-      rbBinaryPath: "/opt/recallbase/rb",
+      hostLaunch: { executablePath: "/opt/recallbase/rb", args: [] },
       platform: "darwin",
       healthCheck: () => true
     });
@@ -100,7 +101,7 @@ describe("extension native host install manifests", () => {
     const context = {} as Parameters<typeof extensionInstallCommand>[0];
     const options = {
       homeDir: mkdtempSync(join(tmpdir(), "recallbase-invalid-id-")),
-      rbBinaryPath: "/opt/recallbase/rb",
+      hostLaunch: { executablePath: "/opt/recallbase/rb", args: [] },
       platform: "darwin" as const,
       healthCheck: () => true
     };
@@ -152,7 +153,7 @@ describe("extension native host install manifests", () => {
     writeFileSync(target.binaryPath, "#!/bin/sh\nexec \"/old/rb\" extension-host \"$@\"\n");
     writeFileSync(target.manifestPath, `${JSON.stringify(chromeNativeManifest(target), null, 2)}\n`);
 
-    expect(isManifestInstalled(target, "/new/rb")).toBe(false);
+    expect(isManifestInstalled(target, { executablePath: "/new/rb", args: [] })).toBe(false);
   });
 
   test("fails verification when a POSIX host wrapper is not executable", () => {
@@ -171,7 +172,47 @@ describe("extension native host install manifests", () => {
   });
 
   test("compiled Bun builds install the real executable path, not the virtual bunfs entrypoint", () => {
-    expect(resolveHostBinaryPath("/$bunfs/root/cli.js", "/opt/recallbase/rb")).toBe("/opt/recallbase/rb");
+    expect(resolveNativeHostLaunch("/$bunfs/root/cli.js", "/opt/recallbase/rb")).toEqual({
+      executablePath: resolve("/opt/recallbase/rb"),
+      args: []
+    });
+    expect(resolveNativeHostLaunch("B:/~BUN/root/cli.js", "C:\\Program Files\\RecallBase\\rb.exe")).toEqual({
+      executablePath: resolve("C:\\Program Files\\RecallBase\\rb.exe"),
+      args: []
+    });
+    expect(resolveNativeHostLaunch("B:\\~BUN\\root\\cli.js", "C:\\Program Files\\RecallBase\\rb.exe")).toEqual({
+      executablePath: resolve("C:\\Program Files\\RecallBase\\rb.exe"),
+      args: []
+    });
+  });
+
+  test("source installs pin the Bun runtime and pass health with a GUI-safe PATH", async () => {
+    if (process.platform === "win32") return;
+    const homeDir = mkdtempSync(join(tmpdir(), "recallbase-source-host-"));
+    const cliPath = resolve(import.meta.dir, "../src/cli.ts");
+    const hostLaunch = resolveNativeHostLaunch(cliPath, process.execPath);
+
+    expect(hostLaunch).toEqual({
+      executablePath: process.execPath,
+      args: [cliPath]
+    });
+
+    const install = await extensionInstallCommand({} as Parameters<typeof extensionInstallCommand>[0], ["install-host"], {
+      homeDir,
+      env: {},
+      hostLaunch,
+      platform: "darwin",
+      healthCheck: (hostPath, platform) => isNativeHostHealthy(hostPath, platform, {
+        PATH: "/usr/bin:/bin:/usr/sbin:/sbin",
+        RECALLBASE_DB: ":memory:"
+      })
+    });
+
+    expect(install.ok).toBe(true);
+    const wrapper = readFileSync(join(homeDir, ".recallbase", "extension-host"), "utf8");
+    expect(wrapper).toContain(process.execPath);
+    expect(wrapper).toContain(cliPath);
+    expect(wrapper).not.toContain("#!/usr/bin/env bun");
   });
 
   test("install-host writes wrapper and manifests, verify-host only checks current state", async () => {
@@ -184,7 +225,7 @@ describe("extension native host install manifests", () => {
     const install = await extensionInstallCommand(context, ["install-host"], {
       homeDir,
       env,
-      rbBinaryPath: "/opt/recallbase/rb",
+      hostLaunch: { executablePath: "/opt/recallbase/rb", args: [] },
       platform: "darwin",
       healthCheck: () => true
     });
@@ -198,13 +239,13 @@ describe("extension native host install manifests", () => {
       ["firefox", true]
     ]);
     const wrapperPath = join(homeDir, ".recallbase", "extension-host");
-    expect(readFileSync(wrapperPath, "utf8")).toBe("#!/bin/sh\nexec \"/opt/recallbase/rb\" extension-host \"$@\"\n");
+    expect(readFileSync(wrapperPath, "utf8")).toBe("#!/bin/sh\nexec '/opt/recallbase/rb' 'extension-host' \"$@\"\n");
     expect(statSync(wrapperPath).mode & 0o111).toBeGreaterThan(0);
 
     const verify = await extensionInstallCommand(context, ["verify-host"], {
       homeDir,
       env,
-      rbBinaryPath: "/opt/recallbase/rb",
+      hostLaunch: { executablePath: "/opt/recallbase/rb", args: [] },
       platform: "darwin",
       healthCheck: () => true
     });
@@ -219,7 +260,7 @@ describe("extension native host install manifests", () => {
     const verify = await extensionInstallCommand({} as Parameters<typeof extensionInstallCommand>[0], ["verify-host"], {
       homeDir,
       env: {},
-      rbBinaryPath: "/opt/recallbase/rb",
+      hostLaunch: { executablePath: "/opt/recallbase/rb", args: [] },
       platform: "darwin",
       healthCheck: () => true
     });
@@ -288,16 +329,17 @@ describe("extension native host install manifests", () => {
     writeFileSync(manifestPath, `${JSON.stringify(chromeNativeManifest(target), null, 2)}\n`);
     registry.writeDefaultValue(nativeHostRegistryKey("chrome"), manifestPath);
 
-    expect(isManifestInstalled(target, rbPath, { platform: "win32", registry })).toBe(true);
+    const hostLaunch = { executablePath: rbPath, args: [] };
+    expect(isManifestInstalled(target, hostLaunch, { platform: "win32", registry })).toBe(true);
     writeFileSync(hostPath, "stale exe bytes");
-    expect(isManifestInstalled(target, rbPath, { platform: "win32", registry })).toBe(false);
+    expect(isManifestInstalled(target, hostLaunch, { platform: "win32", registry })).toBe(false);
   });
 
   test("Windows install requires a compiled rb.exe", async () => {
     const result = await extensionInstallCommand({} as Parameters<typeof extensionInstallCommand>[0], ["install-host"], {
       homeDir: "C:\\Users\\Example",
       env: {},
-      rbBinaryPath: "C:\\Users\\Example\\rb.ts",
+      hostLaunch: { executablePath: "C:\\Users\\Example\\rb.ts", args: [] },
       platform: "win32",
       registry: new MemoryRegistry(),
       healthCheck: () => true

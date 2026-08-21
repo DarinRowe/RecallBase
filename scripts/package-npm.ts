@@ -77,6 +77,7 @@ export async function packageNpmRelease(
       },
       os: [target.id.split("-")[0]],
       cpu: [target.id.split("-")[1]],
+      ...(target.libc ? { libc: [target.libc] } : {}),
       files: ["bin"]
     });
     await copyFile(join(runtime.rootDir, "README.md"), join(packageDir, "README.md"));
@@ -100,6 +101,7 @@ export async function packageNpmRelease(
       url: "https://github.com/DarinRowe/RecallBase/issues"
     },
     keywords: ["recallbase", "cli", "mcp-server", "local-first", "ai-chat", "conversation-history", "coding-agent"],
+    engines: { node: ">=18" },
     bin: {
       rb: "bin/recallbase.cjs",
       recallbase: "bin/recallbase.cjs"
@@ -126,8 +128,18 @@ const packages = ${JSON.stringify(packageMap, null, 2)};
 const key = process.platform + "-" + process.arch;
 const packageName = packages[key];
 
+if (process.platform === "linux") {
+  const report = process.report && process.report.getReport();
+  if (report && report.header && !report.header.glibcVersionRuntime) {
+    console.error("RecallBase prebuilt Linux binaries currently require glibc; musl/Alpine is not supported.");
+    console.error("Use a glibc distribution or run RecallBase from source with Bun.");
+    process.exit(1);
+  }
+}
+
 if (!packageName) {
   console.error("RecallBase does not provide a prebuilt binary for " + key + ".");
+  console.error("Supported platforms: " + Object.keys(packages).join(", ") + ".");
   process.exit(1);
 }
 

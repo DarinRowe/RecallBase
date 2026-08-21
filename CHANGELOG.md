@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-08-20
+
+### Fixed
+
+- Native-host source installs on macOS and Linux now pin absolute Bun and CLI paths so GUI-launched browsers do not depend on the user's shell `PATH`.
+- Windows compiled executables now recognize Bun's Windows virtual entry path when installing the native messaging host.
+
+### Changed
+
+- npm packages now declare the Node 18+ shim requirement and glibc-only Linux prebuilt boundary explicitly.
+- CI and release smoke now validate the compiled Windows native-host installation path.
+
 ## [0.1.5] - 2026-08-20
 
 ### Added
@@ -42,7 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MCP server exposing `today`, `search`, `open`, and `sources` tools.
 - Browser extension native messaging host support.
 
-[Unreleased]: https://github.com/DarinRowe/RecallBase/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/DarinRowe/RecallBase/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/DarinRowe/RecallBase/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/DarinRowe/RecallBase/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/DarinRowe/RecallBase/compare/v0.1.3...v0.1.4
 [0.1.0]: https://github.com/DarinRowe/RecallBase/releases/tag/v0.1.0

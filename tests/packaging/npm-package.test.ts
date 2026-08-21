@@ -33,6 +33,7 @@ describe("npm package artifacts", () => {
 
     const meta = JSON.parse(await readFile(join(output, "packages", "recallbase", "package.json"), "utf8"));
     expect(meta.bin).toEqual({ rb: "bin/recallbase.cjs", recallbase: "bin/recallbase.cjs" });
+    expect(meta.engines).toEqual({ node: ">=18" });
     expect(meta.optionalDependencies).toEqual({
       "recallbase-darwin-arm64": "npm:recallbase@0.1.0-darwin-arm64",
       "recallbase-linux-x64": "npm:recallbase@0.1.0-linux-x64"
@@ -59,11 +60,15 @@ describe("npm package artifacts", () => {
     expect(darwin.version).toBe("0.1.0-darwin-arm64");
     expect(darwin.os).toEqual(["darwin"]);
     expect(darwin.cpu).toEqual(["arm64"]);
+    expect(darwin.libc).toBeUndefined();
     expect(darwin.repository.url).toBe("git+https://github.com/DarinRowe/RecallBase.git");
     expect(darwin.homepage).toBe("https://recallbase.net/desktop-cli/");
     expect(darwin.license).toBe("MIT");
     expect(await readFile(join(output, "packages", "recallbase-darwin-arm64", "README.md"), "utf8")).toBe(
       rootReadme
     );
+
+    const linux = JSON.parse(await readFile(join(output, "packages", "recallbase-linux-x64", "package.json"), "utf8"));
+    expect(linux.libc).toEqual(["glibc"]);
   });
 });
