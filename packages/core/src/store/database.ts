@@ -13,7 +13,7 @@ import {
   type SourceStatus
 } from "@recallbase/contracts";
 import type { ImportBatchInput, NormalizedConversationInput, NormalizedMessageInput, RawEvidenceInput } from "../batch/conversation";
-import { makeSnippet, toFtsQuery } from "../search/search";
+import { makeSnippet, queryTerms, toFtsQuery } from "../search/search";
 import { localDateString, localDayRangeUtc } from "../time/local-date";
 import { stableId } from "./identity";
 import { migrate } from "./migrations";
@@ -54,6 +54,13 @@ interface MessageRow {
   media_json: string;
   raw_evidence_id: string | null;
 }
+
+type SearchRow = ConversationRow & {
+  message_id: string;
+  score: number;
+  message_text: string;
+  message_thinking: string | null;
+};
 
 interface SourceStatusRow {
   id: string;
@@ -313,8 +320,10 @@ export class LocalDatabase {
       .run(source.id, source.label, source.confidence, source.confidenceReason);
   }
 
-  sources(): SourceStatus[] {
-    const rows = this.db.query("SELECT * FROM source_status ORDER BY id").all() as SourceStatusRow[];
+  sources(sourceId?: string): SourceStatus[] {
+    const rows = sourceId
+      ? (this.db.query("SELECT * FROM source_status WHERE id = ? ORDER BY id").all(sourceId) as SourceStatusRow[])
+      : (this.db.query("SELECT * FROM source_status ORDER BY id").all() as SourceStatusRow[]);
     return rows.map((row) => {
       const status: SourceStatus = {
         id: row.id,
@@ -338,25 +347,25 @@ export class LocalDatabase {
   search(query: string, options: { sourceId?: string; date?: string; limit?: number } = {}): SearchResultItem[] {
     const limit = options.limit ?? 10;
     const ftsQuery = toFtsQuery(query);
-    if (!ftsQuery) return [];
+    const unique = new Map<string, SearchResultItem>();
+    if (ftsQuery) this.appendFtsResults(unique, ftsQuery, query, options, limit);
+    if (unique.size < limit) this.appendSubstringResults(unique, query, options, limit);
 
+    return [...unique.values()];
+  }
+
+  private appendFtsResults(
+    unique: Map<string, SearchResultItem>,
+    ftsQuery: string,
+    query: string,
+    options: { sourceId?: string; date?: string },
+    limit: number
+  ): void {
     const sourceFilter = options.sourceId ? "AND c.source_id = $sourceId" : "";
     const dateFilter = options.date ? "AND c.updated_at >= $dateStart AND c.updated_at < $dateEnd" : "";
-    const bindings: Record<string, string | number> = {
-      $query: ftsQuery,
-      $limit: limit * 5
-    };
-    if (options.sourceId) bindings.$sourceId = options.sourceId;
-    if (options.date) {
-      let range;
-      try {
-        range = localDayRangeUtc(options.date);
-      } catch {
-        return [];
-      }
-      bindings.$dateStart = range.start;
-      bindings.$dateEnd = range.end;
-    }
+    const bindings = this.searchBindings(options, limit);
+    if (!bindings) return;
+    bindings.$query = ftsQuery;
     const rows = this.db
       .query(
         `SELECT c.*, f.message_id, bm25(conversation_fts) AS score, m.text AS message_text, m.thinking AS message_thinking
@@ -369,21 +378,67 @@ export class LocalDatabase {
          ORDER BY score ASC, c.updated_at DESC
          LIMIT $limit`
       )
-      .all(bindings) as Array<ConversationRow & { message_id: string; score: number; message_text: string; message_thinking: string | null }>;
+      .all(bindings) as SearchRow[];
+    appendSearchRows(unique, rows, query, limit);
+  }
 
-    const unique = new Map<string, SearchResultItem>();
-    for (const row of rows) {
-      if (unique.has(row.id)) continue;
-      unique.set(row.id, {
-        ...toConversationRef(row, messageSnippet(row.message_text, row.message_thinking, query)),
-        score: row.score,
-        matchedMessageId: row.message_id,
-        uri: conversationUri(row.id)
-      });
-      if (unique.size >= limit) break;
+  private appendSubstringResults(
+    unique: Map<string, SearchResultItem>,
+    query: string,
+    options: { sourceId?: string; date?: string },
+    limit: number
+  ): void {
+    const terms = queryTerms(query);
+    if (terms.length === 0) return;
+    const sourceFilter = options.sourceId ? "AND c.source_id = $sourceId" : "";
+    const dateFilter = options.date ? "AND c.updated_at >= $dateStart AND c.updated_at < $dateEnd" : "";
+    const termFilter = terms
+      .map(
+        (_, index) =>
+          `(instr(lower(c.title), lower($term${index})) > 0 OR instr(lower(m.text), lower($term${index})) > 0 OR instr(lower(COALESCE(m.thinking, '')), lower($term${index})) > 0)`
+      )
+      .join(" AND ");
+    const bindings = this.searchBindings(options, limit);
+    if (!bindings) return;
+    bindings.$limit = limit;
+    terms.forEach((term, index) => {
+      bindings[`$term${index}`] = term;
+    });
+    const rows = this.db
+      .query(
+        `SELECT * FROM (
+           SELECT c.*, m.id AS message_id, 0 AS score, m.text AS message_text, m.thinking AS message_thinking,
+                  ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY m.created_at DESC, m.id) AS match_rank
+           FROM messages m
+           JOIN conversations c ON c.id = m.conversation_id
+           WHERE ${termFilter}
+           ${sourceFilter}
+           ${dateFilter}
+         )
+         WHERE match_rank = 1
+         ORDER BY updated_at DESC
+         LIMIT $limit`
+      )
+      .all(bindings) as SearchRow[];
+    appendSearchRows(unique, rows, query, limit);
+  }
+
+  private searchBindings(
+    options: { sourceId?: string; date?: string },
+    limit: number
+  ): Record<string, string | number> | undefined {
+    const bindings: Record<string, string | number> = { $limit: limit * 5 };
+    if (options.sourceId) bindings.$sourceId = options.sourceId;
+    if (options.date) {
+      try {
+        const range = localDayRangeUtc(options.date);
+        bindings.$dateStart = range.start;
+        bindings.$dateEnd = range.end;
+      } catch {
+        return undefined;
+      }
     }
-
-    return [...unique.values()];
+    return bindings;
   }
 
   today(date = localDateString(), limit = 8): ConversationRef[] {
@@ -967,12 +1022,26 @@ function messageSnippet(text: string, thinking: string | null, query: string): s
   return makeSnippet(text || thinkingText, query);
 }
 
+function appendSearchRows(
+  unique: Map<string, SearchResultItem>,
+  rows: SearchRow[],
+  query: string,
+  limit: number
+): void {
+  for (const row of rows) {
+    if (unique.has(row.id)) continue;
+    unique.set(row.id, {
+      ...toConversationRef(row, messageSnippet(row.message_text, row.message_thinking, query)),
+      score: row.score,
+      matchedMessageId: row.message_id,
+      uri: conversationUri(row.id)
+    });
+    if (unique.size >= limit) break;
+  }
+}
+
 function searchTerms(query: string): string[] {
-  return query
-    .trim()
-    .split(/\s+/)
-    .map((term) => term.replace(/[^a-zA-Z0-9_-]/g, "").toLowerCase())
-    .filter(Boolean);
+  return queryTerms(query).map((term) => term.toLocaleLowerCase());
 }
 
 function includesNormalized(text: string, term: string): boolean {

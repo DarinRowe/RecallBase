@@ -48,4 +48,44 @@ describe("CLI JSON", () => {
     const sources = await runCommand(["sources", "--json", "--db", path]);
     expect(JSON.parse(sources.stdout).data.sources[0].id).toBe("codex");
   });
+
+  test("executable writes large open JSON responses without truncation", () => {
+    const path = join(mkdtempSync(join(tmpdir(), "rb-cli-large-json-")), "db.sqlite");
+    const db = new LocalDatabase(path);
+    db.importBatch({
+      sourceId: "codex",
+      sourceLabel: "Codex",
+      confidence: "stable",
+      confidenceReason: "test fixture",
+      conversations: [
+        {
+          sourceId: "codex",
+          sourceLabel: "Codex",
+          upstreamId: "large-json",
+          title: "Large JSON output",
+          startedAt: "2026-05-21T11:00:00.000Z",
+          updatedAt: "2026-05-21T11:05:00.000Z",
+          rawEvidence: [],
+          messages: [{ role: "assistant", createdAt: "2026-05-21T11:05:00.000Z", text: "x".repeat(90_000) }]
+        }
+      ]
+    });
+    const id = db.search("Large JSON")[0]!.id;
+    db.close();
+
+    const result = Bun.spawnSync([
+      process.execPath,
+      join(import.meta.dir, "../src/cli.ts"),
+      "open",
+      id,
+      "--json",
+      "--db",
+      path
+    ]);
+    const stdout = new TextDecoder().decode(result.stdout);
+
+    expect(result.exitCode).toBe(0);
+    expect(stdout.length).toBeGreaterThan(90_000);
+    expect(JSON.parse(stdout).data.messages[0].text).toHaveLength(90_000);
+  });
 });

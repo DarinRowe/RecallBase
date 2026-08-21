@@ -60,7 +60,7 @@ describe("local store perf signal", () => {
           {
             uuid: `message-assistant-${index}`,
             sender: "assistant",
-            text: `Perf response ${index}`,
+            text: `Perf response ${index}${index === 4_999 ? " 评分提示" : ""}`,
             created_at: "2026-04-06T08:01:00.000000Z",
             updated_at: "2026-04-06T08:01:00.000000Z",
             attachments: [],
@@ -77,6 +77,9 @@ describe("local store perf signal", () => {
       expect(result.totals).toMatchObject({ conversations: 5000, messages: 10000, rawEvidence: 0 });
       expect(db.sources()[0]).toMatchObject({ id: "claude-web", conversations: 5000, messages: 10000, rawEvidence: 0 });
       expect(elapsed).toBeLessThan(15000);
+      const searchStarted = performance.now();
+      expect(db.search("评分", { sourceId: "claude-web" })).toHaveLength(1);
+      expect(performance.now() - searchStarted).toBeLessThan(1000);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

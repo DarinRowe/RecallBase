@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Removed Cloudflare sync and Web viewer to focus on local-first features.
+- Search now preserves Unicode queries and fills token-search gaps with a constrained substring pass.
+- Source-filtered search responses now return coverage for the selected source only.
+- Large CLI JSON responses now flush completely before the process exits.
 
 ### Added
 
