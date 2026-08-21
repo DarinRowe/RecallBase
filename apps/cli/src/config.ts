@@ -11,6 +11,8 @@ export interface CliFlags {
   query?: string;
   id?: string;
   limit?: number;
+  messageId?: string;
+  context?: number;
   roots: string[];
   sourceIds: string[];
   outPath?: string;
@@ -49,6 +51,12 @@ export function parseFlags(args: string[], env: NodeJS.ProcessEnv = process.env)
       index += 1;
     } else if (arg === "--limit" && next) {
       flags.limit = Number.parseInt(next, 10);
+      index += 1;
+    } else if (arg === "--message" && next) {
+      flags.messageId = next;
+      index += 1;
+    } else if (arg === "--context" && next) {
+      flags.context = Number.parseInt(next, 10);
       index += 1;
     } else if ((arg === "--source-root" || arg === "--root") && next) {
       roots.push(next);

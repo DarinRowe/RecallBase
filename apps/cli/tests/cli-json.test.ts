@@ -21,7 +21,11 @@ function seedDb(path: string): void {
         startedAt: "2026-05-21T11:00:00.000Z",
         updatedAt: "2026-05-21T11:05:00.000Z",
         rawEvidence: [],
-        messages: [{ role: "user", createdAt: "2026-05-21T11:00:00.000Z", text: "Agent should call rb today --json." }]
+        messages: [
+          { role: "user", createdAt: "2026-05-21T11:00:00.000Z", text: "Before the matching message." },
+          { role: "assistant", createdAt: "2026-05-21T11:01:00.000Z", text: "Agent should call rb today --json." },
+          { role: "user", createdAt: "2026-05-21T11:02:00.000Z", text: "After the matching message." }
+        ]
       }
     ]
   });
@@ -43,7 +47,24 @@ describe("CLI JSON", () => {
     expect(searchBody.data.results[0].uri).toBe(`recallbase:conversation/${searchBody.data.results[0].id}`);
 
     const opened = await runCommand(["open", searchBody.data.results[0].id, "--json", "--db", path]);
-    expect(JSON.parse(opened.stdout).data.messages[0].text).toContain("rb today");
+    expect(JSON.parse(opened.stdout).data.messages[1].text).toContain("rb today");
+
+    const windowed = await runCommand([
+      "open",
+      searchBody.data.results[0].id,
+      "--message",
+      searchBody.data.results[0].matchedMessageId,
+      "--context",
+      "0",
+      "--json",
+      "--db",
+      path
+    ]);
+    expect(JSON.parse(windowed.stdout).data).toMatchObject({
+      messageCount: 3,
+      messages: [{ text: "Agent should call rb today --json." }],
+      messageWindow: { context: 0, returnedMessages: 1 }
+    });
 
     const sources = await runCommand(["sources", "--json", "--db", path]);
     expect(JSON.parse(sources.stdout).data.sources[0].id).toBe("codex");

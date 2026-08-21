@@ -153,15 +153,16 @@ npx skills update recallbase --global
 
 ## Supported Sources
 
-### Local Coding Agents
+### Agents
 
-| Source           | Status       |
-| ---------------- | ------------ |
-| OpenAI Codex CLI | ✅ Core      |
-| Claude Code      | ✅ Core      |
-| GitHub Copilot   | ✅ Supported |
-| Kimi Code        | ✅ Supported |
-| OpenCode         | ✅ Supported |
+| Source                          | Status       |
+| ------------------------------- | ------------ |
+| OpenAI Codex CLI + ChatGPT app | ✅ Core      |
+| Claude Code                     | ✅ Core      |
+| GitHub Copilot                  | ✅ Supported |
+| Grok Build                      | ✅ Supported |
+| Kimi Code                       | ✅ Supported |
+| OpenCode                        | ✅ Supported |
 
 ### Web AI - Browser Extension
 

@@ -1,10 +1,8 @@
-import { createReadStream } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
-import { createInterface } from "node:readline";
 import type { ImportBatchInput, NormalizedConversationInput, NormalizedMessageInput } from "@recallbase/core";
 import type { Diagnostic } from "@recallbase/contracts";
-import { diagnostic, malformedJsonlDiagnostic } from "../common/diagnostics";
+import { diagnostic } from "../common/diagnostics";
 import {
   fileSchemaFingerprint,
   findFiles,
@@ -15,7 +13,7 @@ import {
   userHome
 } from "../common/discovery";
 import type { SourceDiscoveryResult, SourceImporter } from "../common/importer";
-import { asArray, asIsoDate, asObject, asString, readJsonObject } from "../common/json";
+import { asArray, asIsoDate, asObject, asString, readJsonObject, streamJsonl } from "../common/json";
 
 const SOURCE_ID = "kimi-code";
 const SOURCE_LABEL = "Kimi Code";
@@ -128,7 +126,15 @@ async function* importKimiCodeBatches(
 
     try {
       const reducer = new KimiSessionReducer(sessionDir, state);
-      diagnostics.push(...await readKimiWire(wirePath, (record) => reducer.add(record)));
+      diagnostics.push(...await streamJsonl(
+        wirePath,
+        SOURCE_ID,
+        (record) => reducer.add(record.value),
+        {
+          trailingIncompleteCode: "kimi_code_trailing_record_incomplete",
+          trailingIncompleteMessage: "An incomplete trailing Kimi Code record was skipped."
+        }
+      ));
       const conversation = reducer.finish();
       if (!conversation) sessionsWithoutMessages += 1;
       yield importBatch(conversation ? [conversation] : [], diagnostics, discovery?.schemaFingerprint ?? reducer.fingerprint());
@@ -171,39 +177,6 @@ function importBatch(
   };
   if (fingerprint !== undefined) batch.schemaFingerprint = fingerprint;
   return batch;
-}
-
-async function readKimiWire(path: string, onRecord: (record: Record<string, unknown>) => void): Promise<Diagnostic[]> {
-  const input = createReadStream(path, { encoding: "utf8" });
-  const lines = createInterface({ input, crlfDelay: Infinity });
-  const diagnostics: Diagnostic[] = [];
-  let lineNumber = 0;
-  let pendingMalformed: { line: number; error: unknown } | undefined;
-
-  for await (const line of lines) {
-    lineNumber += 1;
-    if (!line.trim()) continue;
-    if (pendingMalformed) {
-      diagnostics.push(malformedJsonlDiagnostic(SOURCE_ID, `${path}#L${pendingMalformed.line}`, pendingMalformed.error));
-      pendingMalformed = undefined;
-    }
-    let value: unknown;
-    try {
-      value = JSON.parse(line) as unknown;
-      if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("JSONL record must be an object");
-    } catch (error) {
-      pendingMalformed = { line: lineNumber, error };
-      continue;
-    }
-    onRecord(value as Record<string, unknown>);
-  }
-
-  if (pendingMalformed) {
-    diagnostics.push(
-      diagnostic(SOURCE_ID, "info", "kimi_code_trailing_record_incomplete", "An incomplete trailing Kimi Code record was skipped.")
-    );
-  }
-  return diagnostics;
 }
 
 /*

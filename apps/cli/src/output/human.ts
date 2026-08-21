@@ -73,6 +73,11 @@ function formatSearch(data: SearchResult): string {
 
 function formatOpen(data: ConversationDetail): string {
   const lines = [`${data.title} [${data.sourceLabel}]`, `id: ${data.id}`, `updated: ${data.updatedAt}`];
+  if (data.messageWindow) {
+    lines.push(
+      `window: ${data.messageWindow.returnedMessages} of ${data.messageCount} messages around ${data.messageWindow.anchorMessageId}`
+    );
+  }
   for (const message of data.messages) {
     lines.push(`\n${message.role} ${message.createdAt}`);
     if (message.thinking) lines.push(`[thinking]\n${message.thinking}`);

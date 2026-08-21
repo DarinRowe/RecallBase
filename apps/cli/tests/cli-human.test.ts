@@ -9,7 +9,18 @@ describe("CLI human output", () => {
   test("reports the package version without opening the database", async () => {
     const result = await runCommand(["--version"], { ...process.env, RECALLBASE_DB: "/not/a/real/database.sqlite" });
 
-    expect(result).toEqual({ code: 0, stdout: "recallbase 0.1.4\n" });
+    expect(result).toEqual({ code: 0, stdout: "recallbase 0.1.5\n" });
+  });
+
+  test("shows subcommand help without opening the database or searching", async () => {
+    const dbPath = join(mkdtempSync(join(tmpdir(), "rb-search-help-")), "recallbase.sqlite");
+    const result = await runCommand(["search", "--help"], { ...process.env, RECALLBASE_DB: dbPath });
+
+    expect(result).toEqual({
+      code: 0,
+      stdout: "Usage: rb search <query> [--source <source-id>] [--date YYYY-MM-DD] [--limit 1-50] [--json]\n"
+    });
+    expect(existsSync(dbPath)).toBe(false);
   });
 
   test("native-host verification does not initialize the local database", async () => {
@@ -89,5 +100,17 @@ describe("CLI human output", () => {
     expect(result.stdout).toContain(`open: rb open ${id}`);
     expect(result.stdout).toContain("Run the open command shown under a result to view the full conversation.");
     expect(result.stdout).not.toContain("\x1b");
+
+    const windowed = await runCommand([
+      "open",
+      id,
+      "--message",
+      searchBody.data.results[0].matchedMessageId,
+      "--context",
+      "0",
+      "--db",
+      path
+    ]);
+    expect(windowed.stdout).toContain("window: 1 of 1 messages around msg_");
   });
 });

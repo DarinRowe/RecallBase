@@ -35,6 +35,7 @@ describe("local store perf signal", () => {
 
     const started = performance.now();
     expect(db.search("sync import", { limit: 20 })).toHaveLength(20);
+    expect(db.search("sync", { limit: 500 })).toHaveLength(50);
     expect(db.today("2026-05-21")).toHaveLength(8);
     expect(performance.now() - started).toBeLessThan(1000);
   });

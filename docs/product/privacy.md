@@ -4,6 +4,8 @@ RecallBase V1 is local-first. Import, search, today, open, sources, and backup r
 
 The Kimi Code local importer reads only main-agent session state and wire records. It indexes user-visible prompts and assistant-visible text, but does not index private thinking, tool payloads or results, subagent streams, system prompts, logs, tasks, or credentials.
 
+The Grok Build local importer reads only `summary.json` metadata and the authoritative ACP `updates.jsonl` session stream. It indexes user-visible prompts and assistant-visible text, but does not index thought chunks, tool payloads or results, hooks, plans, tasks, system prompts, file snapshots, search indexes, or credentials.
+
 ## Browser Extension
 
 Browser extension capture follows the same local-first boundary. The supported sites are ChatGPT, Claude, Gemini, DeepSeek, Kimi, Qwen, Doubao, Tencent Yuanbao, Grok, Perplexity, NotebookLM, Google AI Studio, GitHub Copilot, and Microsoft Copilot.

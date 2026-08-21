@@ -192,6 +192,11 @@ export interface ConversationDetail extends ConversationRef {
   messages: MessageDetail[];
   rawEvidenceRefs: string[];
   diagnostics: Diagnostic[];
+  messageWindow?: {
+    anchorMessageId: string;
+    context: number;
+    returnedMessages: number;
+  };
 }
 
 export interface SourcesResult {

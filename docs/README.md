@@ -9,6 +9,7 @@ Use this as the first stop for CLI, local database, and agent integration work.
 ## Engineering
 
 - CLI entry points: `cli/README.md`
+- Grok official interfaces and local import: `cli/grok-import-research.md`
 - Release platforms: `release/platforms.md`
 
 ## Agents

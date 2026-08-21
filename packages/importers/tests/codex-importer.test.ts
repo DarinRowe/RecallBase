@@ -232,6 +232,44 @@ describe("Codex importer", () => {
     }
   });
 
+  test("uses ChatGPT desktop Codex task names from the session index", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "recallbase-chatgpt-codex-title-"));
+    try {
+      const codexRoot = join(dir, ".codex");
+      const sessionsRoot = join(codexRoot, "sessions");
+      await mkdir(sessionsRoot, { recursive: true });
+      const sessionId = "019e071c-f36c-7401-ab21-9c927bb56377";
+      const path = join(sessionsRoot, `rollout-2026-05-08T03-23-18-${sessionId}.jsonl`);
+      await writeFile(
+        join(codexRoot, "session_index.jsonl"),
+        `${JSON.stringify({ id: sessionId, thread_name: "Diagnose the desktop import" })}\n`
+      );
+      await writeFile(
+        path,
+        [
+          {
+            type: "session_meta",
+            timestamp: "2026-05-08T03:23:18.000Z",
+            payload: { session_id: sessionId }
+          },
+          {
+            type: "user",
+            timestamp: "2026-05-08T03:24:18.000Z",
+            payload: { message: { role: "user", content: "Fallback title" } }
+          }
+        ].map((item) => JSON.stringify(item)).join("\n")
+      );
+
+      const importer = createCodexImporter();
+      const batch = await importer.importFromPaths([path]);
+
+      expect(batch.conversations[0]!.title).toBe("Diagnose the desktop import");
+      expect(batch.conversations[0]!.upstreamId).toBe(sessionId);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
   test("reports absent default roots cleanly", async () => {
     const importer = createCodexImporter();
     const discovery = await importer.discover({ roots: [resolve(import.meta.dir, "missing-codex-root")] });

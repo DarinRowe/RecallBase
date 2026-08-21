@@ -1,5 +1,6 @@
-import { queryOpen, querySearch, querySources, queryToday, type LocalDatabase } from "@recallbase/core";
+import { queryOpen, querySources, queryToday, type LocalDatabase, type OpenConversationOptions } from "@recallbase/core";
 import { refreshBeforeQuery } from "../commands/refresh";
+import { runSearch, type SearchRequest } from "../commands/search";
 import type { CliFlags } from "../config";
 
 export interface McpToolCall {
@@ -14,16 +15,19 @@ export async function callTool(db: LocalDatabase, call: McpToolCall, flags: CliF
   }
   if (call.name === "search") {
     const query = String(call.arguments?.query ?? "");
-    if (!query.trim()) return querySearch(db, query);
     const sourceId = call.arguments?.sourceId === undefined ? undefined : String(call.arguments.sourceId);
-    await refreshBeforeQuery({ db, flags: sourceId === undefined ? flags : { ...flags, sourceIds: [sourceId] } });
-    const options: { sourceId?: string; date?: string; limit?: number } = {};
-    if (sourceId !== undefined) options.sourceId = sourceId;
-    if (call.arguments?.date) options.date = String(call.arguments.date);
-    if (call.arguments?.limit) options.limit = Number(call.arguments.limit);
-    return querySearch(db, query, options);
+    const request: SearchRequest = { query };
+    if (sourceId !== undefined) request.sourceId = sourceId;
+    if (call.arguments?.date !== undefined) request.date = String(call.arguments.date);
+    if (call.arguments?.limit !== undefined) request.limit = Number(call.arguments.limit);
+    return runSearch({ db, flags }, request);
   }
-  if (call.name === "open") return queryOpen(db, String(call.arguments?.id ?? ""));
+  if (call.name === "open") {
+    const options: OpenConversationOptions = {};
+    if (call.arguments?.messageId !== undefined) options.messageId = String(call.arguments.messageId);
+    if (call.arguments?.context !== undefined) options.context = Number(call.arguments.context);
+    return queryOpen(db, String(call.arguments?.id ?? ""), options);
+  }
   if (call.name === "sources") return querySources(db);
   return {
     ok: false,
@@ -51,7 +55,7 @@ export const mcpTools = [
         query: { type: "string" },
         sourceId: { type: "string" },
         date: { type: "string" },
-        limit: { type: "number" }
+        limit: { type: "integer", minimum: 1, maximum: 50 }
       },
       required: ["query"],
       additionalProperties: false
@@ -59,10 +63,14 @@ export const mcpTools = [
   },
   {
     name: "open",
-    description: "Open a local RecallBase conversation by id.",
+    description: "Open a local RecallBase conversation, optionally around a matched message.",
     inputSchema: {
       type: "object",
-      properties: { id: { type: "string" } },
+      properties: {
+        id: { type: "string" },
+        messageId: { type: "string", description: "Matched message id returned by search." },
+        context: { type: "integer", minimum: 0, maximum: 5, description: "Neighboring messages on each side; defaults to 1." }
+      },
       required: ["id"],
       additionalProperties: false
     }
