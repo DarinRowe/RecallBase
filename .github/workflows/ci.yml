@@ -52,10 +52,12 @@ jobs:
           & .\dist\rb.exe extension verify-host --json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           reg query "HKCU\Software\ExampleBrowser" /s
-          reg query "HKCU\Software\ExampleBrowser\Browser\NativeMessagingHosts\ai.recallbase.extension_host" /ve
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           reg query "HKCU\Software\FreshBrowser\Browser\NativeMessagingHosts\ai.recallbase.extension_host" /ve
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $freshExit = $LASTEXITCODE
+          reg query "HKCU\Software\ExampleBrowser\Browser\NativeMessagingHosts\ai.recallbase.extension_host" /ve
+          $exampleExit = $LASTEXITCODE
+          if ($freshExit -ne 0) { exit $freshExit }
+          if ($exampleExit -ne 0) { exit $exampleExit }
 
   linux-native-host:
     runs-on: ubuntu-latest
