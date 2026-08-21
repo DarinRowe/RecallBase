@@ -173,7 +173,7 @@ describe("extension native host install manifests", () => {
 
   test("compiled Bun builds install the real executable path, not the virtual bunfs entrypoint", () => {
     expect(resolveNativeHostLaunch("/$bunfs/root/cli.js", "/opt/recallbase/rb")).toEqual({
-      executablePath: "/opt/recallbase/rb",
+      executablePath: resolve("/opt/recallbase/rb"),
       args: []
     });
     expect(resolveNativeHostLaunch("B:/~BUN/root/cli.js", "C:\\Program Files\\RecallBase\\rb.exe")).toEqual({
