@@ -47,10 +47,11 @@ jobs:
           $env:USERPROFILE = $testHome
           $env:LOCALAPPDATA = Join-Path $testHome "AppData\Local"
           New-Item -ItemType Directory -Force $env:LOCALAPPDATA | Out-Null
-          & .\dist\rb.exe extension install-host --chromium-registry-root "HKCU\Software\FreshBrowser\Browser\NativeMessagingHosts"
+          & .\dist\rb.exe extension install-host --chromium-registry-root "HKCU\Software\FreshBrowser\Browser\NativeMessagingHosts" --json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & .\dist\rb.exe extension verify-host
+          & .\dist\rb.exe extension verify-host --json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          reg query "HKCU\Software\ExampleBrowser" /s
           reg query "HKCU\Software\ExampleBrowser\Browser\NativeMessagingHosts\ai.recallbase.extension_host" /ve
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           reg query "HKCU\Software\FreshBrowser\Browser\NativeMessagingHosts\ai.recallbase.extension_host" /ve
