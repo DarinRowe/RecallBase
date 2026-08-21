@@ -12,6 +12,11 @@ export const DEFAULT_FIREFOX_EXTENSION_ID = "recallbase-capture@recallbase.net";
 
 type NativeHostPlatform = "darwin" | "linux" | "win32";
 
+export type NativeHostLaunch = {
+  executablePath: string;
+  args: string[];
+};
+
 type NativeHostRegistry = {
   writeDefaultValue(key: string, value: string): void;
   readDefaultValue(key: string): string | undefined;
@@ -20,7 +25,7 @@ type NativeHostRegistry = {
 type ExtensionInstallOptions = {
   homeDir?: string;
   env?: NodeJS.ProcessEnv;
-  rbBinaryPath?: string;
+  hostLaunch?: NativeHostLaunch;
   platform?: NodeJS.Platform;
   registry?: NativeHostRegistry;
   healthCheck?: (hostPath: string, platform: NativeHostPlatform) => boolean;
@@ -42,8 +47,8 @@ export async function extensionInstallCommand(
   }
   const env = options.env ?? process.env;
   const registry = options.registry ?? new WindowsRegistry();
-  const rbBinaryPath = options.rbBinaryPath ?? resolveHostBinaryPath(process.argv[1] ?? "rb");
-  if (platform === "win32" && extname(rbBinaryPath).toLowerCase() !== ".exe") {
+  const hostLaunch = options.hostLaunch ?? resolveNativeHostLaunch(process.argv[1] ?? "rb");
+  if (platform === "win32" && (hostLaunch.args.length > 0 || extname(hostLaunch.executablePath).toLowerCase() !== ".exe")) {
     return err(install ? "extension-install-host" : "extension-verify-host", {
       code: "invalid_arguments",
       message: "Windows native-host installation requires a compiled rb.exe.",
@@ -51,7 +56,7 @@ export async function extensionInstallCommand(
     });
   }
   const hostPath = nativeHostWrapperPath(options.homeDir, platform);
-  if (install) writeHostWrapper(hostPath, rbBinaryPath, platform);
+  if (install) writeHostWrapper(hostPath, hostLaunch, platform);
   const extensionIds: { chromeExtensionId?: string; firefoxExtensionId?: string } = {};
   if (env.RECALLBASE_CHROME_EXTENSION_ID !== undefined) {
     extensionIds.chromeExtensionId = env.RECALLBASE_CHROME_EXTENSION_ID;
@@ -73,7 +78,7 @@ export async function extensionInstallCommand(
   }
   const manifests = targets.map((target) => {
     if (install) writeManifest(target, { platform, registry });
-    return { ...target, installed: isManifestInstalled(target, rbBinaryPath, { platform, registry }) };
+    return { ...target, installed: isManifestInstalled(target, hostLaunch, { platform, registry }) };
   });
   const manifestsInstalled = manifests.every((manifest) => manifest.installed);
   const healthCheck = options.healthCheck ?? isNativeHostHealthy;
@@ -179,7 +184,7 @@ export function nativeHostRegistryKey(browser: ExtensionHostManifestResult["brow
 
 export function isManifestInstalled(
   target: ExtensionHostManifestResult,
-  rbBinaryPath?: string,
+  hostLaunch?: NativeHostLaunch,
   options: { platform?: NativeHostPlatform; registry?: NativeHostRegistry } = {}
 ): boolean {
   if (target.allowedIds.length === 0) return false;
@@ -189,7 +194,7 @@ export function isManifestInstalled(
     if (!binaryStat.isFile()) return false;
     const platform = options.platform ?? platformForPaths();
     if (platform !== "win32" && (binaryStat.mode & 0o111) === 0) return false;
-    if (rbBinaryPath !== undefined && !hostMatchesBinary(target.binaryPath, rbBinaryPath, platform)) return false;
+    if (hostLaunch !== undefined && !hostMatchesLaunch(target.binaryPath, hostLaunch, platform)) return false;
     if (platform === "win32" && options.registry?.readDefaultValue(nativeHostRegistryKey(target.browser)) !== target.manifestPath) return false;
     const expected = target.browser === "firefox" ? firefoxNativeManifest(target) : chromeNativeManifest(target);
     const actual = JSON.parse(readFileSync(target.manifestPath, "utf8"));
@@ -211,27 +216,32 @@ function writeManifest(
   if (options.platform === "win32") options.registry.writeDefaultValue(nativeHostRegistryKey(target.browser), target.manifestPath);
 }
 
-function writeHostWrapper(hostPath: string, rbBinaryPath: string, platform: NativeHostPlatform): void {
+function writeHostWrapper(hostPath: string, hostLaunch: NativeHostLaunch, platform: NativeHostPlatform): void {
   mkdirSync(directoryName(hostPath, platform), { recursive: true });
   if (platform === "win32") {
-    if (resolve(hostPath) !== resolve(rbBinaryPath)) copyFileSync(rbBinaryPath, hostPath);
+    if (resolve(hostPath) !== resolve(hostLaunch.executablePath)) copyFileSync(hostLaunch.executablePath, hostPath);
     return;
   }
-  writeFileSync(hostPath, hostWrapperScript(rbBinaryPath), { mode: 0o755 });
+  writeFileSync(hostPath, hostWrapperScript(hostLaunch), { mode: 0o755 });
   chmodSync(hostPath, 0o755);
 }
 
-function hostWrapperScript(rbBinaryPath: string): string {
-  return `#!/bin/sh\nexec ${JSON.stringify(rbBinaryPath)} extension-host "$@"\n`;
+function hostWrapperScript(hostLaunch: NativeHostLaunch): string {
+  const command = [hostLaunch.executablePath, ...hostLaunch.args, "extension-host"].map(posixShellQuote).join(" ");
+  return `#!/bin/sh\nexec ${command} "$@"\n`;
+}
+
+function posixShellQuote(value: string): string {
+  return `'${value.replaceAll("'", `'"'"'`)}'`;
 }
 
 function directoryName(path: string, platform: NativeHostPlatform): string {
   return platform === "win32" ? win32.dirname(path) : dirname(path);
 }
 
-function hostMatchesBinary(hostPath: string, rbBinaryPath: string, platform: NativeHostPlatform): boolean {
-  if (platform === "win32") return readFileSync(hostPath).equals(readFileSync(rbBinaryPath));
-  return readFileSync(hostPath, "utf8") === hostWrapperScript(rbBinaryPath);
+function hostMatchesLaunch(hostPath: string, hostLaunch: NativeHostLaunch, platform: NativeHostPlatform): boolean {
+  if (platform === "win32") return readFileSync(hostPath).equals(readFileSync(hostLaunch.executablePath));
+  return readFileSync(hostPath, "utf8") === hostWrapperScript(hostLaunch);
 }
 
 function chromiumManifestPath(
@@ -269,8 +279,15 @@ function windowsDataDir(homeDir: string, env: NodeJS.ProcessEnv): string {
   return win32.join(env.LOCALAPPDATA ?? win32.join(homeDir, "AppData", "Local"), "RecallBase");
 }
 
-export function resolveHostBinaryPath(candidate: string, executablePath = process.execPath): string {
-  return resolveBinaryPath(candidate.includes("$bunfs") ? executablePath : candidate);
+export function resolveNativeHostLaunch(candidate: string, executablePath = process.execPath): NativeHostLaunch {
+  const executable = resolveBinaryPath(executablePath);
+  if (isBunCompiledEntrypoint(candidate)) return { executablePath: executable, args: [] };
+  return { executablePath: executable, args: [resolveBinaryPath(candidate)] };
+}
+
+function isBunCompiledEntrypoint(candidate: string): boolean {
+  const normalized = candidate.replaceAll("\\", "/");
+  return normalized.includes("/$bunfs/") || /^[a-z]:\/~bun\//i.test(normalized);
 }
 
 function resolveBinaryPath(candidate: string): string {
@@ -295,13 +312,21 @@ function chromiumExtensionIds(customId?: string): string[] {
   return [...new Set(ids)];
 }
 
-export function isNativeHostHealthy(hostPath: string, _platform: NativeHostPlatform = platformForPaths()): boolean {
+export function isNativeHostHealthy(
+  hostPath: string,
+  platform: NativeHostPlatform = platformForPaths(),
+  env: NodeJS.ProcessEnv = process.env
+): boolean {
   try {
     const result = Bun.spawnSync([hostPath], {
       stdin: encodeNativeMessage({ type: "health", protocolVersion: 1 }),
       stdout: "pipe",
       stderr: "pipe",
-      env: { ...process.env, RECALLBASE_DB: ":memory:" },
+      env: {
+        ...env,
+        ...(platform === "win32" ? {} : { PATH: "/usr/bin:/bin:/usr/sbin:/sbin" }),
+        RECALLBASE_DB: ":memory:"
+      },
       timeout: 5_000,
       maxBuffer: 1024 * 1024
     });

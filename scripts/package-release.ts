@@ -27,6 +27,7 @@ export type CliTargetInfo = {
   bunTarget: string;
   releaseTarget: string;
   binaryName: string;
+  libc?: "glibc";
 };
 
 type PackageReleasePaths = {
@@ -47,8 +48,8 @@ const defaultPaths: PackageReleasePaths = {
 const allCliTargets: CliTargetInfo[] = [
   { id: "darwin-arm64", bunTarget: "bun-darwin-arm64", releaseTarget: "aarch64-apple-darwin", binaryName: "rb" },
   { id: "darwin-x64", bunTarget: "bun-darwin-x64", releaseTarget: "x86_64-apple-darwin", binaryName: "rb" },
-  { id: "linux-arm64", bunTarget: "bun-linux-arm64", releaseTarget: "aarch64-unknown-linux-gnu", binaryName: "rb" },
-  { id: "linux-x64", bunTarget: "bun-linux-x64", releaseTarget: "x86_64-unknown-linux-gnu", binaryName: "rb" },
+  { id: "linux-arm64", bunTarget: "bun-linux-arm64", releaseTarget: "aarch64-unknown-linux-gnu", binaryName: "rb", libc: "glibc" },
+  { id: "linux-x64", bunTarget: "bun-linux-x64", releaseTarget: "x86_64-unknown-linux-gnu", binaryName: "rb", libc: "glibc" },
   { id: "win32-x64", bunTarget: "bun-windows-x64", releaseTarget: "x86_64-pc-windows-msvc", binaryName: "rb.exe" }
 ];
 
