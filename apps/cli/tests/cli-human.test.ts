@@ -23,6 +23,15 @@ describe("CLI human output", () => {
     expect(existsSync(dbPath)).toBe(false);
   });
 
+  test("documents universal Chromium fork registration flags", async () => {
+    const result = await runCommand(["extension", "--help"]);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("--chromium-user-data-dir <path>");
+    expect(result.stdout).toContain("--chromium-registry-root <HKCU-key>");
+    expect(result.stdout).toContain("--clear-chromium-targets");
+  });
+
   test("native-host verification does not initialize the local database", async () => {
     const dbPath = join(mkdtempSync(join(tmpdir(), "rb-verify-no-db-")), "recallbase.sqlite");
 

@@ -2,10 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { chmodSync, mkdtempSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { parseFlags } from "../src/config";
 import {
   DEFAULT_FIREFOX_EXTENSION_ID,
   DEFAULT_CHROME_EXTENSION_ID,
   chromeNativeManifest,
+  discoverMacChromiumBrowsers,
+  discoverMacFirefoxBrowsers,
+  discoverLinuxChromiumBrowsers,
   extensionInstallCommand,
   firefoxNativeManifest,
   isManifestInstalled,
@@ -18,6 +22,7 @@ import {
 
 class MemoryRegistry {
   values = new Map<string, string>();
+  nativeMessagingRoots: string[] = [];
 
   writeDefaultValue(key: string, value: string): void {
     this.values.set(key, value);
@@ -26,9 +31,187 @@ class MemoryRegistry {
   readDefaultValue(key: string): string | undefined {
     return this.values.get(key);
   }
+
+  listNativeMessagingRoots(): string[] {
+    return this.nativeMessagingRoots;
+  }
 }
 
 describe("extension native host install manifests", () => {
+  test("parses repeatable universal Chromium target flags", () => {
+    const parsed = parseFlags([
+      "extension",
+      "install-host",
+      "--chromium-user-data-dir", "/profiles/one",
+      "--chromium-user-data-dir", "/profiles/two",
+      "--chromium-registry-root", "HKCU\\Software\\Vendor\\Browser\\NativeMessagingHosts",
+      "--clear-chromium-targets"
+    ]);
+
+    expect(parsed.command).toBe("extension");
+    expect(parsed.rest).toEqual(["install-host"]);
+    expect(parsed.flags.chromiumUserDataDirs).toEqual(["/profiles/one", "/profiles/two"]);
+    expect(parsed.flags.chromiumRegistryRoots).toEqual(["HKCU\\Software\\Vendor\\Browser\\NativeMessagingHosts"]);
+    expect(parsed.flags.clearChromiumTargets).toBe(true);
+  });
+
+  test("reports installed official Firefox channels that share the Mozilla manifest", () => {
+    const homeDir = mkdtempSync(join(tmpdir(), "recallbase-firefox-discovery-"));
+    const applications = join(homeDir, "Applications");
+    for (const name of ["Firefox.app", "Firefox Developer Edition.app", "Firefox Nightly.app", "Tor Browser.app"]) {
+      mkdirSync(join(applications, name, "Contents"), { recursive: true });
+    }
+
+    const labels = discoverMacFirefoxBrowsers({
+      roots: [applications],
+      readInfo: (plistPath) => {
+        const appName = plistPath.split("/").at(-3)?.replace(/\.app$/, "") ?? "";
+        if (appName === "Tor Browser") {
+          return { CFBundleName: appName, CFBundleIdentifier: "org.torproject.torbrowser", CFBundleExecutable: "firefox" };
+        }
+        const suffix = appName === "Firefox"
+          ? "firefox"
+          : appName === "Firefox Developer Edition"
+            ? "firefoxdeveloperedition"
+            : "nightly";
+        return { CFBundleName: appName, CFBundleIdentifier: `org.mozilla.${suffix}`, CFBundleExecutable: "firefox" };
+      }
+    });
+
+    expect(labels).toEqual(["Firefox", "Firefox Developer Edition", "Firefox Nightly"]);
+    expect(labels).not.toContain("Tor Browser");
+    const firefoxTarget = nativeManifestTargets("/Users/example/.recallbase/extension-host", {}, {
+      homeDir: "/Users/example",
+      platform: "darwin",
+      firefoxBrowserLabels: labels
+    }).find((target) => target.browser === "firefox");
+    expect(firefoxTarget?.browserLabel).toBe("Firefox, Firefox Developer Edition, Firefox Nightly");
+  });
+
+  test("discovers Dia from its established Chromium user-data root", () => {
+    const homeDir = mkdtempSync(join(tmpdir(), "recallbase-dia-discovery-"));
+    const applications = join(homeDir, "Applications");
+    const applicationSupport = join(homeDir, "Library", "Application Support");
+    mkdirSync(join(applications, "Dia.app", "Contents"), { recursive: true });
+    mkdirSync(join(applicationSupport, "Dia", "User Data", "Default", "Extensions"), { recursive: true });
+    writeFileSync(join(applicationSupport, "Dia", "User Data", "Local State"), "{}\n");
+    writeFileSync(join(applicationSupport, "Dia", "User Data", "Default", "Preferences"), "{}\n");
+
+    const browsers = discoverMacChromiumBrowsers({
+      roots: [applications],
+      applicationSupportDir: applicationSupport,
+      readInfo: () => ({
+        CFBundleIdentifier: "company.thebrowser.dia",
+        CFBundleName: "Dia",
+        CFBundleURLTypes: [{ CFBundleURLSchemes: ["http", "https"] }]
+      })
+    });
+
+    expect(browsers).toEqual([{ label: "Dia", productDirName: "Dia/User Data" }]);
+  });
+
+  test("discovers Arc from its established Chromium user-data root", () => {
+    const homeDir = mkdtempSync(join(tmpdir(), "recallbase-arc-discovery-"));
+    const applications = join(homeDir, "Applications");
+    const applicationSupport = join(homeDir, "Library", "Application Support");
+    mkdirSync(join(applications, "Arc.app", "Contents"), { recursive: true });
+    mkdirSync(join(applicationSupport, "Arc", "User Data", "Default", "Extensions"), { recursive: true });
+    writeFileSync(join(applicationSupport, "Arc", "User Data", "Local State"), "{}\n");
+    writeFileSync(join(applicationSupport, "Arc", "User Data", "Default", "Preferences"), "{}\n");
+
+    const browsers = discoverMacChromiumBrowsers({
+      roots: [applications],
+      applicationSupportDir: applicationSupport,
+      readInfo: () => ({
+        CFBundleIdentifier: "company.thebrowser.Browser",
+        CFBundleName: "Arc",
+        CFBundleURLTypes: [{ CFBundleURLSchemes: ["http", "https"] }]
+      })
+    });
+
+    expect(browsers).toEqual([{ label: "Arc", productDirName: "Arc/User Data" }]);
+    const targets = nativeManifestTargets("/Users/example/.recallbase/extension-host", {}, {
+      homeDir: "/Users/example",
+      platform: "darwin",
+      chromiumBrowsers: browsers
+    });
+    expect(targets).toContainEqual(expect.objectContaining({
+      browserLabel: "Arc",
+      manifestPath: "/Users/example/Library/Application Support/Arc/User Data/NativeMessagingHosts/ai.recallbase.extension_host.json"
+    }));
+  });
+
+  test("discovers installed macOS Chromium browsers without treating Electron apps as browsers", () => {
+    const homeDir = mkdtempSync(join(tmpdir(), "recallbase-browser-discovery-"));
+    const applications = join(homeDir, "Applications");
+    for (const relativePath of [
+      "ego lite.app",
+      "Google Chrome.app",
+      "ChatGPT.app",
+      "Unsafe Browser.app",
+      "Setapp/Brave Browser.app"
+    ]) {
+      mkdirSync(join(applications, relativePath, "Contents"), { recursive: true });
+    }
+    const chromiumDocumentType = [{ LSItemContentTypes: ["org.chromium.extension"] }];
+    const browsers = discoverMacChromiumBrowsers({
+      roots: [applications],
+      readInfo: (plistPath) => {
+        if (plistPath.includes("ego lite.app")) {
+          return {
+            CFBundleName: "ego lite",
+            CrProductDirName: "Citro Labs/ego lite",
+            CFBundleDocumentTypes: chromiumDocumentType
+          };
+        }
+        if (plistPath.includes("Google Chrome.app")) {
+          return {
+            CFBundleName: "Google Chrome",
+            CrProductDirName: "Google/Chrome",
+            CFBundleDocumentTypes: chromiumDocumentType
+          };
+        }
+        if (plistPath.includes("Brave Browser.app")) {
+          return {
+            CFBundleDisplayName: "Brave Browser",
+            CrProductDirName: "BraveSoftware/Brave-Browser",
+            CFBundleDocumentTypes: chromiumDocumentType
+          };
+        }
+        if (plistPath.includes("Unsafe Browser.app")) {
+          return {
+            CFBundleName: "Unsafe Browser",
+            CrProductDirName: "../../escape",
+            CFBundleDocumentTypes: chromiumDocumentType
+          };
+        }
+        return { CFBundleName: "ChatGPT", CrProductDirName: "com.openai.codex" };
+      }
+    });
+
+    expect(browsers).toHaveLength(4);
+    expect(browsers).toEqual(expect.arrayContaining([
+      { label: "ego lite", productDirName: "Citro Labs/ego lite" },
+      { label: "Google Chrome", productDirName: "Google/Chrome" },
+      { label: "Brave Browser", productDirName: "BraveSoftware/Brave-Browser" }
+    ]));
+    expect(browsers.some((browser) => browser.label === "ChatGPT")).toBe(false);
+
+    const targets = nativeManifestTargets("/Users/example/.recallbase/extension-host", {}, {
+      homeDir: "/Users/example",
+      platform: "darwin",
+      chromiumBrowsers: browsers
+    });
+    const detected = targets.filter((target) => target.browser === "chromium" && target.browserLabel);
+    expect(detected.map((target) => [target.browserLabel, target.manifestPath])).toEqual(expect.arrayContaining([
+      ["ego lite", "/Users/example/Library/Application Support/Citro Labs/ego lite/NativeMessagingHosts/ai.recallbase.extension_host.json"],
+      ["Brave Browser", "/Users/example/Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/ai.recallbase.extension_host.json"]
+    ]));
+    expect(detected).toHaveLength(2);
+    expect(targets.filter((target) => target.manifestPath.includes("Google/Chrome/NativeMessagingHosts"))).toHaveLength(1);
+    expect(targets.some((target) => target.manifestPath.includes("escape"))).toBe(false);
+  });
+
   test("generates exact Chromium-store and Firefox allowlists with no wildcards", () => {
     const targets = nativeManifestTargets("/Users/example/.recallbase/extension-host", {
       chromeExtensionId: "abcdefghijklmnopabcdefghijklmnop"
@@ -235,6 +418,7 @@ describe("extension native host install manifests", () => {
     expect(install.data.manifests.map((manifest) => [manifest.browser, manifest.installed])).toEqual([
       ["chrome", true],
       ["chrome-for-testing", true],
+      ["chromium", true],
       ["edge", true],
       ["firefox", true]
     ]);
@@ -253,6 +437,116 @@ describe("extension native host install manifests", () => {
     expect(verify.ok).toBe(true);
     if (!verify.ok) throw new Error("expected verify to succeed");
     expect(verify.data.manifests.every((manifest) => manifest.installed)).toBe(true);
+  });
+
+  test("install-host and verify-host share detected macOS Chromium targets", async () => {
+    const homeDir = mkdtempSync(join(tmpdir(), "recallbase-detected-browser-install-"));
+    const applications = join(homeDir, "Applications");
+    mkdirSync(join(applications, "ego lite.app", "Contents"), { recursive: true });
+    const options = {
+      homeDir,
+      env: {},
+      hostLaunch: { executablePath: "/opt/recallbase/rb", args: [] },
+      platform: "darwin" as const,
+      healthCheck: () => true,
+      macApplicationRoots: [applications],
+      readMacBrowserInfo: () => ({
+        CFBundleName: "ego lite",
+        CrProductDirName: "Citro Labs/ego lite",
+        CFBundleDocumentTypes: [{ LSItemContentTypes: ["org.chromium.extension"] }]
+      })
+    };
+    const context = {} as Parameters<typeof extensionInstallCommand>[0];
+
+    const missing = await extensionInstallCommand(context, ["verify-host"], options);
+    expect(missing.ok).toBe(false);
+    if (missing.ok) throw new Error("expected detected browser verification to fail before install");
+    expect(missing.error.message).toContain("ego lite");
+
+    const install = await extensionInstallCommand(context, ["install-host"], options);
+    expect(install.ok).toBe(true);
+    if (!install.ok) throw new Error("expected detected browser install to succeed");
+    const egoManifest = install.data.manifests.find((manifest) => manifest.browserLabel === "ego lite");
+    expect(egoManifest).toMatchObject({ browser: "chromium", installed: true });
+
+    const verify = await extensionInstallCommand(context, ["verify-host"], options);
+    expect(verify.ok).toBe(true);
+    if (!verify.ok) throw new Error("expected detected browser verification to succeed");
+    expect(verify.data.manifests.find((manifest) => manifest.browserLabel === "ego lite")?.installed).toBe(true);
+  });
+
+  test("persists an explicit Chromium user-data target for later verification", async () => {
+    const homeDir = mkdtempSync(join(tmpdir(), "recallbase-custom-browser-install-"));
+    const userDataDir = join(homeDir, "CustomVendor", "CustomBrowser", "User Data");
+    mkdirSync(join(userDataDir, "Default"), { recursive: true });
+    writeFileSync(join(userDataDir, "Local State"), "{}\n");
+    writeFileSync(join(userDataDir, "Default", "Preferences"), "{}\n");
+    const baseOptions = {
+      homeDir,
+      env: {},
+      hostLaunch: { executablePath: "/opt/recallbase/rb", args: [] },
+      platform: "darwin" as const,
+      healthCheck: () => true,
+      macApplicationRoots: []
+    };
+    const context = {} as Parameters<typeof extensionInstallCommand>[0];
+
+    const install = await extensionInstallCommand(context, ["install-host"], {
+      ...baseOptions,
+      chromiumUserDataDirs: [userDataDir]
+    });
+    expect(install.ok).toBe(true);
+    if (!install.ok) throw new Error("expected custom Chromium target installation to succeed");
+    expect(install.data.manifests.find((manifest) => manifest.browserLabel === "CustomBrowser/User Data (custom)")).toMatchObject({
+      installed: true,
+      manifestPath: join(userDataDir, "NativeMessagingHosts", "ai.recallbase.extension_host.json")
+    });
+    expect(JSON.parse(readFileSync(join(homeDir, ".recallbase", "extension-host-targets.json"), "utf8")))
+      .toMatchObject({ schemaVersion: 1, userDataDirs: [resolve(userDataDir)] });
+
+    const verify = await extensionInstallCommand(context, ["verify-host"], baseOptions);
+    expect(verify.ok).toBe(true);
+    if (!verify.ok) throw new Error("expected persisted custom Chromium target verification to succeed");
+    expect(verify.data.manifests.some((manifest) => manifest.browserLabel === "CustomBrowser/User Data (custom)" && manifest.installed)).toBe(true);
+
+    const cleared = await extensionInstallCommand(context, ["install-host"], {
+      ...baseOptions,
+      clearChromiumTargets: true
+    });
+    expect(cleared.ok).toBe(true);
+    if (!cleared.ok) throw new Error("expected saved custom targets to clear");
+    expect(cleared.data.manifests.some((manifest) => manifest.browserLabel?.endsWith("(custom)"))).toBe(false);
+    expect(JSON.parse(readFileSync(join(homeDir, ".recallbase", "extension-host-targets.json"), "utf8")))
+      .toMatchObject({ userDataDirs: [], registryRoots: [] });
+  });
+
+  test("rejects invalid or wrong-platform explicit Chromium targets", async () => {
+    const homeDir = mkdtempSync(join(tmpdir(), "recallbase-invalid-custom-browser-"));
+    const context = {} as Parameters<typeof extensionInstallCommand>[0];
+    const common = {
+      homeDir,
+      env: {},
+      hostLaunch: { executablePath: "/opt/recallbase/rb", args: [] },
+      healthCheck: () => true
+    };
+
+    const invalidDataDir = await extensionInstallCommand(context, ["install-host"], {
+      ...common,
+      platform: "linux",
+      chromiumUserDataDirs: [join(homeDir, "not-a-browser")]
+    });
+    expect(invalidDataDir.ok).toBe(false);
+    if (invalidDataDir.ok) throw new Error("expected invalid Chromium data directory to fail");
+    expect(invalidDataDir.error.code).toBe("invalid_arguments");
+
+    const wrongPlatform = await extensionInstallCommand(context, ["verify-host"], {
+      ...common,
+      platform: "darwin",
+      chromiumRegistryRoots: ["HKCU\\Software\\Vendor\\Browser\\NativeMessagingHosts"]
+    });
+    expect(wrongPlatform.ok).toBe(false);
+    if (wrongPlatform.ok) throw new Error("expected Windows registry root on macOS to fail");
+    expect(wrongPlatform.error.message).toContain("only supported on Windows");
   });
 
   test("verify-host returns an error when manifests are missing", async () => {
@@ -278,13 +572,51 @@ describe("extension native host install manifests", () => {
     });
     const chromeTarget = targets.find((target) => target.browser === "chrome");
     const chromeForTestingTarget = targets.find((target) => target.browser === "chrome-for-testing");
+    const chromiumTarget = targets.find((target) => target.browser === "chromium");
     const edgeTarget = targets.find((target) => target.browser === "edge");
     const firefoxTarget = targets.find((target) => target.browser === "firefox");
 
     expect(chromeTarget?.manifestPath).toBe("/home/example/.config/google-chrome/NativeMessagingHosts/ai.recallbase.extension_host.json");
     expect(chromeForTestingTarget?.manifestPath).toBe("/home/example/.config/google-chrome-for-testing/NativeMessagingHosts/ai.recallbase.extension_host.json");
+    expect(chromiumTarget?.manifestPath).toBe("/home/example/.config/chromium/NativeMessagingHosts/ai.recallbase.extension_host.json");
     expect(edgeTarget?.manifestPath).toBe("/home/example/.config/microsoft-edge/NativeMessagingHosts/ai.recallbase.extension_host.json");
     expect(firefoxTarget?.manifestPath).toBe("/home/example/.mozilla/native-messaging-hosts/ai.recallbase.extension_host.json");
+  });
+
+  test("discovers Linux Chromium forks from established profile roots", () => {
+    const homeDir = mkdtempSync(join(tmpdir(), "recallbase-linux-browser-discovery-"));
+    const configRoot = join(homeDir, ".config");
+    mkdirSync(join(configRoot, "BraveSoftware", "Brave-Browser", "Default", "Extensions"), { recursive: true });
+    writeFileSync(join(configRoot, "BraveSoftware", "Brave-Browser", "Local State"), "{}\n");
+    writeFileSync(join(configRoot, "BraveSoftware", "Brave-Browser", "Default", "Preferences"), "{}\n");
+    mkdirSync(join(configRoot, "electron-shell", "Default"), { recursive: true });
+    writeFileSync(join(configRoot, "electron-shell", "Local State"), "{}\n");
+    writeFileSync(join(configRoot, "electron-shell", "Default", "Preferences"), "{}\n");
+
+    const browsers = discoverLinuxChromiumBrowsers({ roots: [configRoot] });
+
+    expect(browsers).toEqual([{
+      label: "BraveSoftware/Brave-Browser",
+      dataDir: join(configRoot, "BraveSoftware", "Brave-Browser")
+    }]);
+    const targets = nativeManifestTargets(join(homeDir, ".recallbase", "extension-host"), {}, {
+      homeDir,
+      platform: "linux",
+      linuxChromiumBrowsers: browsers
+    });
+    expect(targets.some((target) => target.browserLabel === "BraveSoftware/Brave-Browser"
+      && target.manifestPath === join(configRoot, "BraveSoftware", "Brave-Browser", "NativeMessagingHosts", "ai.recallbase.extension_host.json")))
+      .toBe(true);
+  });
+
+  test("prefers CHROME_CONFIG_HOME over XDG_CONFIG_HOME for built-in Linux Chromium targets", () => {
+    const target = nativeManifestTargets("/home/example/.recallbase/extension-host", {}, {
+      homeDir: "/home/example",
+      env: { CHROME_CONFIG_HOME: "/mnt/chrome", XDG_CONFIG_HOME: "/mnt/xdg" },
+      platform: "linux"
+    }).find((candidate) => candidate.browser === "chromium" && !candidate.browserLabel);
+
+    expect(target?.manifestPath).toBe("/mnt/chrome/chromium/NativeMessagingHosts/ai.recallbase.extension_host.json");
   });
 
   test("uses Windows registry-backed manifest locations", () => {
@@ -298,16 +630,115 @@ describe("extension native host install manifests", () => {
       platform: "win32"
     });
     const chromeTarget = targets.find((target) => target.browser === "chrome");
+    const chromiumTarget = targets.find((target) => target.browser === "chromium");
     const edgeTarget = targets.find((target) => target.browser === "edge");
     const firefoxTarget = targets.find((target) => target.browser === "firefox");
 
     expect(hostPath).toBe("C:\\Users\\Example\\.recallbase\\extension-host.exe");
     expect(chromeTarget?.manifestPath).toBe("C:\\Users\\Example\\AppData\\Local\\RecallBase\\NativeMessagingHosts\\ai.recallbase.extension_host.chrome.json");
+    expect(chromiumTarget?.registryKey).toBe("HKCU\\Software\\Chromium\\NativeMessagingHosts\\ai.recallbase.extension_host");
     expect(edgeTarget?.manifestPath).toBe("C:\\Users\\Example\\AppData\\Local\\RecallBase\\NativeMessagingHosts\\ai.recallbase.extension_host.edge.json");
     expect(firefoxTarget?.manifestPath).toBe("C:\\Users\\Example\\AppData\\Local\\RecallBase\\NativeMessagingHosts\\ai.recallbase.extension_host.firefox.json");
     expect(nativeHostRegistryKey("chrome")).toBe("HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\ai.recallbase.extension_host");
+    expect(nativeHostRegistryKey("chromium")).toBe("HKCU\\Software\\Chromium\\NativeMessagingHosts\\ai.recallbase.extension_host");
     expect(nativeHostRegistryKey("edge")).toBe("HKCU\\Software\\Microsoft\\Edge\\NativeMessagingHosts\\ai.recallbase.extension_host");
     expect(nativeHostRegistryKey("firefox")).toBe("HKCU\\Software\\Mozilla\\NativeMessagingHosts\\ai.recallbase.extension_host");
+  });
+
+  test("registers discovered Windows native-messaging browser roots", () => {
+    const homeDir = "C:\\Users\\Example";
+    const registryRoot = "HKCU\\Software\\BraveSoftware\\Brave\\NativeMessagingHosts";
+    const targets = nativeManifestTargets("C:\\Users\\Example\\.recallbase\\extension-host.exe", {}, {
+      homeDir,
+      env: { LOCALAPPDATA: "C:\\Users\\Example\\AppData\\Local" },
+      platform: "win32",
+      windowsChromiumRegistryRoots: [registryRoot]
+    });
+
+    const brave = targets.find((target) => target.browserLabel === "BraveSoftware/Brave");
+    expect(brave?.registryKey).toBe(`${registryRoot}\\ai.recallbase.extension_host`);
+    expect(brave?.manifestPath).toBe("C:\\Users\\Example\\AppData\\Local\\RecallBase\\NativeMessagingHosts\\ai.recallbase.extension_host.chromium.json");
+  });
+
+  test("accepts a fresh explicit Windows Chromium registry root without prior registration", async () => {
+    const registryRoot = "HKCU\\Software\\UnknownVendor\\UnknownBrowser\\NativeMessagingHosts";
+    const result = await extensionInstallCommand({} as Parameters<typeof extensionInstallCommand>[0], ["verify-host"], {
+      homeDir: "C:\\Users\\Example",
+      env: { LOCALAPPDATA: "C:\\Users\\Example\\AppData\\Local" },
+      hostLaunch: { executablePath: "C:\\Users\\Example\\rb.exe", args: [] },
+      platform: "win32",
+      registry: new MemoryRegistry(),
+      healthCheck: () => true,
+      chromiumRegistryRoots: [registryRoot],
+      targetStorePath: join(mkdtempSync(join(tmpdir(), "recallbase-windows-target-store-")), "targets.json")
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected missing Windows manifests to fail verification");
+    const manifests = result.error.details?.manifests as Array<{ browserLabel?: string }>;
+    expect(manifests.some((manifest) => manifest.browserLabel === "UnknownVendor/UnknownBrowser")).toBe(true);
+  });
+
+  test("keeps cleared Windows custom roots ignored until explicitly re-added", async () => {
+    const registryRoot = "HKCU\\Software\\UnknownVendor\\UnknownBrowser\\NativeMessagingHosts";
+    const targetStorePath = join(mkdtempSync(join(tmpdir(), "recallbase-ignored-windows-target-")), "targets.json");
+    writeFileSync(targetStorePath, `${JSON.stringify({
+      schemaVersion: 1,
+      userDataDirs: [],
+      registryRoots: [],
+      ignoredRegistryRoots: [registryRoot]
+    })}\n`);
+    const registry = new MemoryRegistry();
+    registry.nativeMessagingRoots = [registryRoot];
+    const common = {
+      homeDir: "C:\\Users\\Example",
+      env: { LOCALAPPDATA: "C:\\Users\\Example\\AppData\\Local" },
+      hostLaunch: { executablePath: "C:\\Users\\Example\\rb.exe", args: [] },
+      platform: "win32" as const,
+      registry,
+      healthCheck: () => true,
+      targetStorePath
+    };
+    const context = {} as Parameters<typeof extensionInstallCommand>[0];
+
+    const ignored = await extensionInstallCommand(context, ["verify-host"], common);
+    expect(ignored.ok).toBe(false);
+    if (ignored.ok) throw new Error("expected missing built-in Windows manifests to fail verification");
+    const ignoredManifests = ignored.error.details?.manifests as Array<{ browserLabel?: string }>;
+    expect(ignoredManifests.some((manifest) => manifest.browserLabel === "UnknownVendor/UnknownBrowser")).toBe(false);
+
+    const restored = await extensionInstallCommand(context, ["verify-host"], {
+      ...common,
+      chromiumRegistryRoots: [registryRoot]
+    });
+    expect(restored.ok).toBe(false);
+    if (restored.ok) throw new Error("expected missing restored Windows manifest to fail verification");
+    const restoredManifests = restored.error.details?.manifests as Array<{ browserLabel?: string }>;
+    expect(restoredManifests.some((manifest) => manifest.browserLabel === "UnknownVendor/UnknownBrowser")).toBe(true);
+  });
+
+  test("deduplicates discovered Windows roots against built-in registry targets", () => {
+    const targets = nativeManifestTargets("C:\\Users\\Example\\.recallbase\\extension-host.exe", {}, {
+      homeDir: "C:\\Users\\Example",
+      env: { LOCALAPPDATA: "C:\\Users\\Example\\AppData\\Local" },
+      platform: "win32",
+      windowsChromiumRegistryRoots: [
+        "HKEY_CURRENT_USER\\Software\\Google\\Chrome\\NativeMessagingHosts",
+        "HKCU\\Software\\Chromium\\NativeMessagingHosts"
+      ]
+    });
+
+    expect(targets.filter((target) => target.registryKey?.includes("Google\\Chrome\\NativeMessagingHosts"))).toHaveLength(1);
+    expect(targets.filter((target) => target.registryKey?.includes("Software\\Chromium\\NativeMessagingHosts"))).toHaveLength(1);
+  });
+
+  test("uses the current macOS Chrome for Testing manifest path", () => {
+    const target = nativeManifestTargets("/Users/example/.recallbase/extension-host", {}, {
+      homeDir: "/Users/example",
+      platform: "darwin"
+    }).find((candidate) => candidate.browser === "chrome-for-testing");
+
+    expect(target?.manifestPath).toBe("/Users/example/Library/Application Support/Google/ChromeForTesting/NativeMessagingHosts/ai.recallbase.extension_host.json");
   });
 
   test("verifies Windows host copies against the current rb.exe and registry key", () => {

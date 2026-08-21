@@ -41,7 +41,12 @@ export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = 
     return { code: 0, stdout: `recallbase ${packageJson.version}\n` };
   }
   if (command === "extension" && (rest[0] === "install-host" || rest[0] === "verify-host")) {
-    const result = await extensionInstallCommand(undefined, rest, { env });
+    const result = await extensionInstallCommand(undefined, rest, {
+      env,
+      chromiumUserDataDirs: flags.chromiumUserDataDirs,
+      chromiumRegistryRoots: flags.chromiumRegistryRoots,
+      clearChromiumTargets: flags.clearChromiumTargets
+    });
     return {
       code: result.ok ? 0 : 1,
       stdout: flags.json ? formatJson(result) : formatHuman(result)
@@ -106,7 +111,7 @@ function commandHelp(command?: string): string {
     open: "rb open <conversation-id> [--message <message-id> [--context 0-5]] [--json]",
     sources: "rb sources [--json]",
     backup: "rb backup [--out <path>] [--json]",
-    extension: "rb extension <install-host|verify-host> [--json]",
+    extension: "rb extension <install-host|verify-host> [--chromium-user-data-dir <path>] [--chromium-registry-root <HKCU-key>] [--clear-chromium-targets] [--json]",
     "extension-host": "rb extension-host",
     mcp: "rb mcp",
     version: "rb version"

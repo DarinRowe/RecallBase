@@ -268,7 +268,8 @@ export type ExtensionHostResponse =
   | { ok: false; type: "error"; error: { code: RecallBaseErrorCode | "bridge_missing" | "protocol_error"; message: string } };
 
 export interface ExtensionHostManifestResult {
-  browser: "chrome" | "chrome-for-testing" | "edge" | "firefox";
+  browser: "chrome" | "chrome-for-testing" | "edge" | "firefox" | "chromium";
+  browserLabel?: string;
   manifestPath: string;
   hostName: string;
   binaryPath: string;
