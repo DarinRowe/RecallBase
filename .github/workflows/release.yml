@@ -208,6 +208,7 @@ jobs:
         run: |
           if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$VERSION" release-assets/* --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$VERSION" --notes-file release-assets/release-notes.md --repo "$GITHUB_REPOSITORY"
           else
             gh release create "$VERSION" release-assets/* \
               --repo "$GITHUB_REPOSITORY" \

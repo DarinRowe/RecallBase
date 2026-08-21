@@ -41,6 +41,8 @@
     "package:homebrew": "bun run scripts/package-homebrew.ts",
     "package:release": "bun run scripts/package-release.ts --cli-targets=all",
     "package:release:test": "bun run scripts/package-release.ts --test",
+    "check:release-note": "bun run scripts/check-release-note.ts",
+    "release:prepare": "bun run scripts/prepare-release.ts",
     "lint": "bunx tsc -b --pretty false",
     "perf": "bun test tests/perf"
   },

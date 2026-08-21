@@ -51,6 +51,7 @@ The browser extension source lives in a sibling project. This repository still o
 - Keep user-facing CLI output useful, not just raw IDs.
 - Preserve privacy and local-first boundaries.
 - When touching native host protocol, verify compatibility with the browser extension project.
+- For every pull request, update `CHANGELOG.md` under `[Unreleased]` or put `Release-Note: none - <reason>` in the pull request body. Prepare a release with `bun run release:prepare -- --version=X.Y.Z` so changelog promotion and version metadata move together.
 
 ## Review Priorities
 
