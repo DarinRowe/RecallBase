@@ -9,7 +9,7 @@ describe("CLI human output", () => {
   test("reports the package version without opening the database", async () => {
     const result = await runCommand(["--version"], { ...process.env, RECALLBASE_DB: "/not/a/real/database.sqlite" });
 
-    expect(result).toEqual({ code: 0, stdout: "recallbase 0.1.3\n" });
+    expect(result).toEqual({ code: 0, stdout: "recallbase 0.1.4\n" });
   });
 
   test("native-host verification does not initialize the local database", async () => {
