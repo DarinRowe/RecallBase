@@ -7,9 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-08-21
+
+### Added
+
+- Native-host installation now automatically discovers established Chromium forks on macOS and Linux, plus existing per-user native-messaging roots on Windows.
+- Added persistent explicit registration for nonstandard Chromium forks, including verify and clear operations, so new forks do not require code changes.
+- Installed Firefox channels are now reported individually while sharing Mozilla's native-messaging manifest.
+
+### Fixed
+
+- Windows compiled CLI and native-host executables now enter the correct mode and complete the health protocol without invalid empty stdout writes.
+
 ### Changed
 
 - GitHub Release notes are now generated from the matching changelog version, and stable packaging fails when that entry is missing or empty.
+- CI and release smoke tests now exercise compiled native hosts and browser-fork registration across macOS, Linux, and Windows.
 
 ## [0.1.7] - 2026-08-21
 
@@ -69,7 +82,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MCP server exposing `today`, `search`, `open`, and `sources` tools.
 - Browser extension native messaging host support.
 
-[Unreleased]: https://github.com/DarinRowe/RecallBase/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/DarinRowe/RecallBase/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/DarinRowe/RecallBase/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/DarinRowe/RecallBase/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/DarinRowe/RecallBase/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/DarinRowe/RecallBase/compare/v0.1.4...v0.1.5
