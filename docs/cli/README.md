@@ -25,6 +25,8 @@ When CLI commands, JSON shape, or command semantics change, update `../../skills
 
 Search preserves Unicode text and uses the existing FTS ranking first. When token matching does not fill the requested result set, RecallBase performs a bounded substring pass with the same source and date constraints. This keeps common searches fast while supporting writing systems without whitespace-delimited words and partial terms without a language-specific tokenizer or external dependency.
 
+Search normalizes result limits to 10 by default and 50 at most for both CLI and MCP callers. Each result's `matchedMessageId` can be passed to `open` with a context radius from 0 to 5. A message-scoped open returns only that evidence window while preserving the conversation's full `messageCount`; an unscoped open remains unchanged.
+
 ## Codex Import Boundary
 
 The `codex` source supports OpenAI Codex CLI and Codex tasks created in the [ChatGPT desktop app](https://developers.openai.com/). OpenAI now distributes the desktop experience as ChatGPT, with Codex integrated as its coding agent. These Codex surfaces use the local JSONL sessions under `~/.codex/sessions/` and `~/.codex/archived_sessions/`, so RecallBase imports them through one source adapter. It also reads `history.jsonl` and `session_index.jsonl` when present to recover user-facing task titles.

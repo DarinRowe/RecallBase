@@ -12,7 +12,7 @@
     },
     "apps/cli": {
       "name": "recallbase",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "bin": {
         "recallbase": "./src/cli.ts",
         "rb": "./src/cli.ts",

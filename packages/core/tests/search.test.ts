@@ -48,6 +48,45 @@ describe("queries", () => {
     }
   });
 
+  test("centers snippets on the window matching the most query terms", () => {
+    const db = new LocalDatabase();
+    db.importBatch({
+      sourceId: "codex",
+      sourceLabel: "Codex",
+      confidence: "stable",
+      confidenceReason: "test fixture",
+      conversations: [{
+        sourceId: "codex",
+        sourceLabel: "Codex",
+        upstreamId: "best-snippet",
+        title: "Search excerpt",
+        startedAt: "2026-05-21T09:00:00.000Z",
+        updatedAt: "2026-05-21T09:30:00.000Z",
+        rawEvidence: [],
+        messages: [{
+          role: "assistant",
+          createdAt: "2026-05-21T09:00:00.000Z",
+          text: `SEO ${"unrelated ".repeat(35)}The strongest SEO 建议 is to publish original research.`
+        }]
+      }]
+    });
+
+    expect(db.search("SEO 建议")[0]?.snippet).toContain("strongest SEO 建议");
+  });
+
+  test("normalizes search limits consistently for direct and envelope queries", () => {
+    const db = seededDb();
+
+    expect(db.search("diagnostics", { limit: -1 })).toHaveLength(1);
+    expect(querySearch(db, "diagnostics", { limit: 0.5 })).toMatchObject({
+      ok: true,
+      data: { filters: { limit: 10 } }
+    });
+    const capped = querySearch(db, "diagnostics", { limit: 500 });
+    expect(capped.ok).toBe(true);
+    if (capped.ok) expect(capped.data.filters.limit).toBe(50);
+  });
+
   test("searches Unicode scripts without language-specific dependencies", () => {
     const db = new LocalDatabase();
     db.importBatch({
@@ -185,5 +224,50 @@ describe("queries", () => {
 
     expect(queryOpen(db, "missing").ok).toBe(false);
     expect(queryOpen(db, id).ok).toBe(true);
+  });
+
+  test("opens a bounded message window around a search match", () => {
+    const db = new LocalDatabase();
+    db.importBatch({
+      sourceId: "codex",
+      sourceLabel: "Codex",
+      confidence: "stable",
+      confidenceReason: "test fixture",
+      conversations: [{
+        sourceId: "codex",
+        sourceLabel: "Codex",
+        upstreamId: "message-window",
+        title: "Bounded evidence",
+        startedAt: "2026-05-21T09:00:00.000Z",
+        updatedAt: "2026-05-21T09:04:00.000Z",
+        rawEvidence: [],
+        messages: ["before one", "before two", "matched evidence", "after one", "after two"].map((text, index) => ({
+          role: index % 2 === 0 ? "user" as const : "assistant" as const,
+          createdAt: `2026-05-21T09:0${index}:00.000Z`,
+          text
+        }))
+      }]
+    });
+    const match = db.search("matched evidence")[0]!;
+    const opened = queryOpen(db, match.id, { messageId: match.matchedMessageId, context: 1 });
+
+    expect(opened.ok).toBe(true);
+    if (opened.ok) {
+      expect(opened.data.messageCount).toBe(5);
+      expect(opened.data.messages.map((message) => message.text)).toEqual(["before two", "matched evidence", "after one"]);
+      expect(opened.data.messageWindow).toEqual({
+        anchorMessageId: match.matchedMessageId,
+        context: 1,
+        returnedMessages: 3
+      });
+    }
+    expect(queryOpen(db, match.id, { messageId: "missing", context: 1 })).toMatchObject({
+      ok: false,
+      error: { code: "not_found" }
+    });
+    expect(queryOpen(db, match.id, { context: 1 })).toMatchObject({
+      ok: false,
+      error: { code: "invalid_arguments" }
+    });
   });
 });

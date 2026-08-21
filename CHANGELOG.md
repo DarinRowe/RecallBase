@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-08-20
+
+### Added
+
+- Added local Grok Build session import from official `updates.jsonl` history while excluding hidden subagents, reasoning, tool payloads, and reverted events.
+- Added bounded evidence retrieval around a matched message through `rb open --message <id> --context <0-5>` and the equivalent MCP parameters.
+
+### Changed
+
+- Search snippets now favor windows containing more query terms, and search limits share one validated 1-50 contract across CLI, MCP, and core queries.
+- The RecallBase agent skill now follows a narrower query ladder and opens bounded evidence before full conversations.
+- CLI subcommand help no longer initializes the local database.
+
 ## [0.1.4] - 2026-08-20
 
 ### Changed
@@ -29,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MCP server exposing `today`, `search`, `open`, and `sources` tools.
 - Browser extension native messaging host support.
 
-[Unreleased]: https://github.com/DarinRowe/RecallBase/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/DarinRowe/RecallBase/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/DarinRowe/RecallBase/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/DarinRowe/RecallBase/compare/v0.1.3...v0.1.4
 [0.1.0]: https://github.com/DarinRowe/RecallBase/releases/tag/v0.1.0

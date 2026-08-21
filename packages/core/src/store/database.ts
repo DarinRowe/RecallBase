@@ -13,7 +13,7 @@ import {
   type SourceStatus
 } from "@recallbase/contracts";
 import type { ImportBatchInput, NormalizedConversationInput, NormalizedMessageInput, RawEvidenceInput } from "../batch/conversation";
-import { makeSnippet, queryTerms, toFtsQuery } from "../search/search";
+import { makeSnippet, normalizeSearchLimit, normalizeSearchText, queryTerms, toFtsQuery } from "../search/search";
 import { localDateString, localDayRangeUtc } from "../time/local-date";
 import { stableId } from "./identity";
 import { migrate } from "./migrations";
@@ -345,7 +345,7 @@ export class LocalDatabase {
   }
 
   search(query: string, options: { sourceId?: string; date?: string; limit?: number } = {}): SearchResultItem[] {
-    const limit = options.limit ?? 10;
+    const limit = normalizeSearchLimit(options.limit);
     const ftsQuery = toFtsQuery(query);
     const unique = new Map<string, SearchResultItem>();
     if (ftsQuery) this.appendFtsResults(unique, ftsQuery, query, options, limit);
@@ -1016,9 +1016,9 @@ function parseJsonStringArray(value: string): string[] {
 function messageSnippet(text: string, thinking: string | null, query: string): string {
   const terms = searchTerms(query);
   const thinkingText = thinking ?? "";
-  const textHasFirstTerm = terms[0] ? includesNormalized(text, terms[0]) : false;
-  const thinkingHasFirstTerm = terms[0] ? includesNormalized(thinkingText, terms[0]) : false;
-  if (thinkingText && thinkingHasFirstTerm && !textHasFirstTerm) return `[thinking] ${makeSnippet(thinkingText, query)}`;
+  const textMatches = terms.filter((term) => includesNormalized(text, term)).length;
+  const thinkingMatches = terms.filter((term) => includesNormalized(thinkingText, term)).length;
+  if (thinkingText && thinkingMatches > textMatches) return `[thinking] ${makeSnippet(thinkingText, query)}`;
   return makeSnippet(text || thinkingText, query);
 }
 
@@ -1045,7 +1045,7 @@ function searchTerms(query: string): string[] {
 }
 
 function includesNormalized(text: string, term: string): boolean {
-  return text.toLowerCase().includes(term);
+  return normalizeSearchText(text).toLocaleLowerCase().includes(term);
 }
 
 function mergeRawEvidence(left: RawEvidenceInput[], right: RawEvidenceInput[]): RawEvidenceInput[] {

@@ -41,7 +41,17 @@ describe("Agent access", () => {
     const sources = JSON.parse((await runCommand(["sources", "--json", "--db", dbPath])).stdout);
     const today = JSON.parse((await runCommand(["today", "--json", "--db", dbPath, "--date", "2026-05-21"])).stdout);
     const search = JSON.parse((await runCommand(["search", "fixture coverage", "--json", "--db", dbPath])).stdout);
-    const opened = JSON.parse((await runCommand(["open", search.data.results[0].id, "--json", "--db", dbPath])).stdout);
+    const opened = JSON.parse((await runCommand([
+      "open",
+      search.data.results[0].id,
+      "--message",
+      search.data.results[0].matchedMessageId,
+      "--context",
+      "1",
+      "--json",
+      "--db",
+      dbPath
+    ])).stdout);
 
     const skillRoot = resolve("skills/recallbase");
     const skillPath = resolve(skillRoot, "SKILL.md");
@@ -50,7 +60,7 @@ describe("Agent access", () => {
 
     expect(skill).toContain("rb today --json");
     expect(skill).toContain("rb search \"<specific query>\" --json");
-    expect(skill).toContain("rb open <conversation-id> --json");
+    expect(skill).toContain("rb open <conversation-id> --message <matched-message-id> --context 1 --json");
     expect(linkedFiles.length).toBeGreaterThan(0);
     expect(linkedFiles.every(existsSync)).toBe(true);
     expect(existsSync(resolve(skillRoot, "agents/openai.yaml"))).toBe(true);
@@ -58,6 +68,7 @@ describe("Agent access", () => {
     expect(sources.data.sources.some((source: { health: string }) => source.health === "healthy" || source.health === "partial")).toBe(true);
     expect(today.data.continuationHints[0]).toStartWith("rb open ");
     expect(search.data.results[0].sourceId).toBe("claude-code");
-    expect(JSON.stringify(opened.data)).toContain("Importer tests cover diagnostics and raw evidence");
+    expect(opened.data.messageWindow).toMatchObject({ context: 1 });
+    expect(JSON.stringify(opened.data)).toContain("surface malformed JSONL as diagnostics");
   });
 });

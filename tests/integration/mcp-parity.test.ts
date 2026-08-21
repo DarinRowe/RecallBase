@@ -31,6 +31,9 @@ describe("MCP parity", () => {
     if (cli.ok && mcp.ok && mcp.meta.command === "search") {
       expect(mcp.data.results[0]?.id).toBe(cli.data.results[0]?.id);
     }
+
+    const capped = await callTool(db, { name: "search", arguments: { query: "parity", limit: 500 } }, { json: true, dbPath: ":memory:", roots: [], sourceIds: [] });
+    expect(capped).toMatchObject({ ok: true, data: { filters: { limit: 50 } } });
   });
 
   test("today, open, and sources mirror query-layer envelopes", async () => {
@@ -57,6 +60,11 @@ describe("MCP parity", () => {
 
     expect(stripGeneratedAt(await callTool(db, { name: "today", arguments: { date: "2026-05-21" } }, flags))).toEqual(stripGeneratedAt(queryToday(db, "2026-05-21")));
     expect(stripGeneratedAt(await callTool(db, { name: "open", arguments: { id } }, flags))).toEqual(stripGeneratedAt(queryOpen(db, id)));
+    const match = db.search("Open me")[0]!;
+    expect(stripGeneratedAt(await callTool(db, {
+      name: "open",
+      arguments: { id, messageId: match.matchedMessageId, context: 0 }
+    }, flags))).toEqual(stripGeneratedAt(queryOpen(db, id, { messageId: match.matchedMessageId, context: 0 })));
     expect(stripGeneratedAt(await callTool(db, { name: "sources", arguments: {} }, flags))).toEqual(stripGeneratedAt(querySources(db)));
     expect(await callTool(db, { name: "missing", arguments: {} }, flags)).toMatchObject({
       ok: false,

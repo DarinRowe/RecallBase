@@ -32,10 +32,10 @@ export function defaultArgv(argv = Bun.argv): string[] {
 export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = process.env): Promise<RunResult> {
   const { command, rest, flags } = parseFlags(argv, env);
   if (command === "help" || command === "--help" || command === "-h") {
-    return {
-      code: 0,
-      stdout: "RecallBase commands: import, today, search, open, sources, backup, extension, extension-host, mcp, version\n"
-    };
+    return { code: 0, stdout: commandHelp() };
+  }
+  if (rest.includes("--help") || rest.includes("-h")) {
+    return { code: 0, stdout: commandHelp(command) };
   }
   if (command === "version" || command === "--version" || command === "-V") {
     return { code: 0, stdout: `recallbase ${packageJson.version}\n` };
@@ -86,11 +86,7 @@ async function dispatch(command: string, rest: string[], context: Parameters<typ
     await refreshBeforeQuery(context);
     return todayCommand(context);
   }
-  if (command === "search") {
-    if (!rest.join(" ").trim()) return searchCommand(context, rest);
-    await refreshBeforeQuery(context);
-    return searchCommand(context, rest);
-  }
+  if (command === "search") return searchCommand(context, rest);
   if (command === "open") return openCommand(context, rest);
   if (command === "sources") return sourcesCommand(context);
   if (command === "backup") return backupCommand(context);
@@ -100,6 +96,23 @@ async function dispatch(command: string, rest: string[], context: Parameters<typ
     hint: "Run rb --help.",
     details: { attemptedCommand: command }
   });
+}
+
+function commandHelp(command?: string): string {
+  const usage: Record<string, string> = {
+    import: "rb import [--source <source-id>] [--root <path>] [--force] [--json]",
+    today: "rb today [--date YYYY-MM-DD] [--json]",
+    search: "rb search <query> [--source <source-id>] [--date YYYY-MM-DD] [--limit 1-50] [--json]",
+    open: "rb open <conversation-id> [--message <message-id> [--context 0-5]] [--json]",
+    sources: "rb sources [--json]",
+    backup: "rb backup [--out <path>] [--json]",
+    extension: "rb extension <install-host|verify-host> [--json]",
+    "extension-host": "rb extension-host",
+    mcp: "rb mcp",
+    version: "rb version"
+  };
+  if (command && usage[command]) return `Usage: ${usage[command]}\n`;
+  return "RecallBase commands: import, today, search, open, sources, backup, extension, extension-host, mcp, version\nRun rb <command> --help for usage.\n";
 }
 
 if (import.meta.main) {

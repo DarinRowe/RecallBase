@@ -18,9 +18,9 @@ This workflow requires the local `rb` CLI on `PATH` and a RecallBase store popul
    - Same-day continuity: `rb today --json`
    - A known topic, error, file, branch, command, or decision: `rb search "<specific query>" --json`
    - Suspected coverage gaps: `rb sources --json`
-2. Apply user-supplied source and date constraints immediately. Start with the user's exact language. If it misses, use a query ladder: core concept, then known UI label, filename, command, or code identifier. Expand one dimension at a time and retain the constraints.
+2. Apply user-supplied source and date constraints immediately. Start with the user's exact language. If it misses, climb a query ladder while retaining the constraints: separate unspaced concepts, remove one generic qualifier, then try a known UI label, filename, command, or code identifier. Stop broadening when results can answer the request.
 3. Inspect the JSON envelope. Continue only from `ok: true`; for `ok: false`, use `error.code`, `message`, and `hint` to explain or recover.
-4. Open only the strongest candidate conversations with `rb open <conversation-id> --json`. Search results also provide the stable reference `recallbase:conversation/<id>`.
+4. Open only the strongest candidates. When search returns `matchedMessageId`, retrieve bounded evidence with `rb open <conversation-id> --message <matched-message-id> --context 1 --json`; widen context up to 5 only when needed, then open the full conversation only if the bounded evidence still cannot support the answer. Search results also provide the stable reference `recallbase:conversation/<id>`.
 
 Search results are candidates; opened messages are evidence. An incidental implementation mention does not establish a recommendation or decision.
 
@@ -39,5 +39,5 @@ The response is complete when every material claim is grounded in retrieved hist
 
 ## Conditional references
 
-- Read [references/results.md](references/results.md) when interpreting unfamiliar fields or building against the JSON contract.
+- Read [references/results.md](references/results.md) when interpreting unfamiliar fields, determining whether a conversation used a named external source, or building against the JSON contract.
 - Read [references/troubleshooting.md](references/troubleshooting.md) when `rb` is unavailable, retrieval is empty or incomplete, imports fail, a full re-import is required, or browser capture setup is unhealthy.
