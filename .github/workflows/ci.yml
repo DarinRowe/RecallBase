@@ -42,10 +42,6 @@ jobs:
           $versionOutput = & .\dist\rb.exe --version 2>&1
           $versionOutput | ForEach-Object { Write-Output $_ }
           if (-not ($versionOutput -match '^recallbase ')) { throw "Compiled Windows CLI did not enter normal command mode." }
-          $probeHost = Join-Path $testHome "extension-host.exe"
-          Copy-Item .\dist\rb.exe $probeHost
-          $env:RECALLBASE_PROBE_HOST = $probeHost
-          bun -e 'const payload = new TextEncoder().encode(JSON.stringify({ type: "health", protocolVersion: 1 })); const frame = new Uint8Array(payload.length + 4); new DataView(frame.buffer).setUint32(0, payload.length, true); frame.set(payload, 4); const result = Bun.spawnSync([Bun.env.RECALLBASE_PROBE_HOST], { stdin: frame, stdout: "pipe", stderr: "pipe", timeout: 5000 }); console.log(JSON.stringify({ exitCode: result.exitCode, stdout: Array.from(result.stdout), stderr: new TextDecoder().decode(result.stderr) }));'
           & .\dist\rb.exe extension install-host --chromium-registry-root "HKCU\Software\FreshBrowser\Browser\NativeMessagingHosts" --json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & .\dist\rb.exe extension verify-host --json
