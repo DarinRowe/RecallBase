@@ -32,6 +32,14 @@ jobs:
         shell: pwsh
         run: |
           reg add "HKCU\Software\ExampleBrowser\Browser\NativeMessagingHosts\existing_host" /ve /t REG_SZ /d "$env:RUNNER_TEMP\existing-host.json" /f
+      - name: Inspect native-messaging registry discovery fixture
+        shell: pwsh
+        run: |
+          $searchOutput = & reg query "HKCU\Software" /f "NativeMessagingHosts" /k /s 2>&1
+          $searchExit = $LASTEXITCODE
+          $searchOutput | ForEach-Object { Write-Output $_ }
+          Write-Output "reg-query-exit=$searchExit"
+          exit 0
       - name: Install and verify the compiled Windows native host
         shell: pwsh
         run: |
