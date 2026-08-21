@@ -6,7 +6,7 @@ The local CLI imports, searches, opens, backs up, and exposes RecallBase data to
 
 - Entry point: `apps/cli/src/cli.ts`
 - Commands: `apps/cli/src/commands/*`
-- Local importers: Codex, Claude Code, Claude Web exports, GitHub Copilot, Kimi Code, and OpenCode under `packages/importers/src/*`
+- Local importers: Codex CLI and Codex in the ChatGPT desktop app, Claude Code, Claude Web exports, GitHub Copilot, Kimi Code, and OpenCode under `packages/importers/src/*`
 - Native browser bridge: `apps/cli/src/commands/extension-host.ts`
 - Native host install/verify: `apps/cli/src/commands/extension-install.ts`
 - MCP server: `apps/cli/src/mcp/*`
@@ -24,6 +24,12 @@ When CLI commands, JSON shape, or command semantics change, update `../../skills
 ## Search Boundary
 
 Search preserves Unicode text and uses the existing FTS ranking first. When token matching does not fill the requested result set, RecallBase performs a bounded substring pass with the same source and date constraints. This keeps common searches fast while supporting writing systems without whitespace-delimited words and partial terms without a language-specific tokenizer or external dependency.
+
+## Codex Import Boundary
+
+The `codex` source supports OpenAI Codex CLI and Codex tasks created in the [ChatGPT desktop app](https://developers.openai.com/). OpenAI now distributes the desktop experience as ChatGPT, with Codex integrated as its coding agent. These Codex surfaces use the local JSONL sessions under `~/.codex/sessions/` and `~/.codex/archived_sessions/`, so RecallBase imports them through one source adapter. It also reads `history.jsonl` and `session_index.jsonl` when present to recover user-facing task titles.
+
+RecallBase imports user, assistant, system, and tool messages. Runtime-only records without importable messages are skipped and reported through bounded diagnostics.
 
 ## Kimi Code Import Boundary
 
