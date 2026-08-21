@@ -30,6 +30,7 @@ const SUMMARY_CODES = new Set([
   "copilot_no_messages",
   "copilot_no_requests",
   "copilot_response_unmapped",
+  "kimi_code_no_messages",
   "opencode_no_messages"
 ]);
 

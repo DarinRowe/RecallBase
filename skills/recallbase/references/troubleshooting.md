@@ -9,6 +9,8 @@ Read this file when the CLI is unavailable, results are empty or incomplete, imp
 3. Run `rb import --json` when known local sources have not been imported. It skips unchanged sources; use `rb import --force --json` only when a full re-import is required. `today` and non-empty `search` queries normally refresh known default sources automatically; explicit database paths, explicit roots, and `--no-refresh` suppress that refresh.
 4. Retry the narrow query. Stop when results are available or the source status identifies the missing coverage.
 
+For Kimi Code, the source ID is `kimi-code` and the default data root is `~/.kimi-code/` (or `$KIMI_CODE_HOME`). RecallBase reads `sessions/*/*/state.json` and `sessions/*/*/agents/main/wire.jsonl`; it does not use the legacy `~/.kimi/` tree.
+
 If `rb` is not installed, report that prerequisite. Install it only within the user's authorization; the standard package command is `npm install -g recallbase`.
 
 ## Browser capture

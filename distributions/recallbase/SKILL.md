@@ -12,6 +12,8 @@ Recover the smallest useful slice of local AI history, then answer the user's qu
 
 This workflow requires the local `rb` CLI on `PATH` and a RecallBase store populated from supported local sources. Core retrieval runs locally without login or network access.
 
+Bundled local source IDs are `codex`, `claude-code`, `claude-web`, `copilot`, `kimi-code`, and `opencode`. The `kimi-code` source indexes the user-visible main-agent conversation and deliberately excludes private thinking, tool payloads, subagent streams, and internal injections.
+
 ## Retrieve
 
 1. Choose the narrowest entry point:
@@ -114,6 +116,8 @@ Read this file when the CLI is unavailable, results are empty or incomplete, imp
 2. Run `rb sources --json` and inspect health, counts, import times, and diagnostics.
 3. Run `rb import --json` when known local sources have not been imported. It skips unchanged sources; use `rb import --force --json` only when a full re-import is required. `today` and non-empty `search` queries normally refresh known default sources automatically; explicit database paths, explicit roots, and `--no-refresh` suppress that refresh.
 4. Retry the narrow query. Stop when results are available or the source status identifies the missing coverage.
+
+For Kimi Code, the source ID is `kimi-code` and the default data root is `~/.kimi-code/` (or `$KIMI_CODE_HOME`). RecallBase reads `sessions/*/*/state.json` and `sessions/*/*/agents/main/wire.jsonl`; it does not use the legacy `~/.kimi/` tree.
 
 If `rb` is not installed, report that prerequisite. Install it only within the user's authorization; the standard package command is `npm install -g recallbase`.
 

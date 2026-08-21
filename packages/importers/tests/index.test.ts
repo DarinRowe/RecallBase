@@ -16,6 +16,7 @@ describe("importer registry", () => {
       "claude-code",
       "claude-web",
       "copilot",
+      "kimi-code",
       "opencode"
     ]);
   });
@@ -23,7 +24,7 @@ describe("importer registry", () => {
   test("imports all known sources into LocalDatabase", async () => {
     const dir = await mkdtemp(join(tmpdir(), "recallbase-registry-"));
     try {
-      await seedTinyOpencodeDb(join(dir, "opencode.db"));
+      await seedTinyOpenCodeDb(join(dir, "opencode.db"));
       const progress: string[] = [];
       const db = new LocalDatabase();
       const result = await importKnownSources(db, {
@@ -33,11 +34,11 @@ describe("importer registry", () => {
         }
       });
 
-      expect(result.sources.map((source) => source.source.id)).toEqual(["codex", "claude-code", "claude-web", "copilot", "opencode"]);
-      expect(result.totals.conversations).toBe(7);
+      expect(result.sources.map((source) => source.source.id)).toEqual(["codex", "claude-code", "claude-web", "copilot", "kimi-code", "opencode"]);
+      expect(result.totals.conversations).toBe(8);
       expect(result.totals.rawEvidence).toBe(0);
       expect(progress.some((message) => message.includes("Importing Codex"))).toBe(true);
-      expect(db.sources().map((source) => source.id)).toEqual(["claude-code", "claude-web", "codex", "copilot", "opencode"]);
+      expect(db.sources().map((source) => source.id)).toEqual(["claude-code", "claude-web", "codex", "copilot", "kimi-code", "opencode"]);
       expect(db.search("RecallBase").length).toBeGreaterThan(0);
     } finally {
       await rm(dir, { recursive: true, force: true });
@@ -318,13 +319,13 @@ describe("importer registry", () => {
   });
 });
 
-async function seedTinyOpencodeDb(path: string): Promise<void> {
+async function seedTinyOpenCodeDb(path: string): Promise<void> {
   const db = new Database(path, { create: true });
   try {
     db.exec(await readFile(join(fixtureRoot, "opencode", "schema.sql"), "utf8"));
     db.run("INSERT INTO session (id, title, created_at, updated_at) VALUES (?, ?, ?, ?)", [
       "registry-session",
-      "Registry opencode import",
+      "Registry OpenCode import",
       "2026-05-21T12:00:00.000Z",
       "2026-05-21T12:01:00.000Z"
     ]);
@@ -333,7 +334,7 @@ async function seedTinyOpencodeDb(path: string): Promise<void> {
       "registry-session",
       "user",
       "2026-05-21T12:00:00.000Z",
-      "RecallBase registry should include opencode."
+      "RecallBase registry should include OpenCode."
     ]);
   } finally {
     db.close();

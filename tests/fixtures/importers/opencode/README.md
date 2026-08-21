@@ -1,4 +1,4 @@
-Sanitized opencode SQLite fixture notes.
+Sanitized OpenCode SQLite fixture notes.
 
 The test suite creates a temporary SQLite database using the schema in `schema.sql`.
 

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { access, readdir, readFile, stat } from "node:fs/promises";
+import { access, open, readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -74,11 +74,22 @@ export function schemaFingerprint(parts: unknown[]): string {
 
 export async function fileSchemaFingerprint(paths: string[], sampleBytes = 8192): Promise<string> {
   const samples: string[] = [];
+  const buffer = Buffer.alloc(Math.max(0, sampleBytes));
   for (const path of paths.slice(0, 20)) {
+    let file;
     try {
-      samples.push(await readFile(path, "utf8").then((content) => content.slice(0, sampleBytes)));
+      file = await open(path, "r");
+      let bytesRead = 0;
+      while (bytesRead < buffer.length) {
+        const result = await file.read(buffer, bytesRead, buffer.length - bytesRead, bytesRead);
+        if (result.bytesRead === 0) break;
+        bytesRead += result.bytesRead;
+      }
+      samples.push(buffer.toString("utf8", 0, bytesRead));
     } catch {
       samples.push(`${path}:unreadable`);
+    } finally {
+      await file?.close();
     }
   }
   return createHash("sha256").update(samples.join("\n---\n")).digest("hex").slice(0, 16);

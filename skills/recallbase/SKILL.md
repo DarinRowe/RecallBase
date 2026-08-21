@@ -12,6 +12,8 @@ Recover the smallest useful slice of local AI history, then answer the user's qu
 
 This workflow requires the local `rb` CLI on `PATH` and a RecallBase store populated from supported local sources. Core retrieval runs locally without login or network access.
 
+Bundled local source IDs are `codex`, `claude-code`, `claude-web`, `copilot`, `kimi-code`, and `opencode`. The `kimi-code` source indexes the user-visible main-agent conversation and deliberately excludes private thinking, tool payloads, subagent streams, and internal injections.
+
 ## Retrieve
 
 1. Choose the narrowest entry point:
