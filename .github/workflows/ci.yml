@@ -47,6 +47,9 @@ jobs:
           $env:USERPROFILE = $testHome
           $env:LOCALAPPDATA = Join-Path $testHome "AppData\Local"
           New-Item -ItemType Directory -Force $env:LOCALAPPDATA | Out-Null
+          $versionOutput = & .\dist\rb.exe --version 2>&1
+          $versionOutput | ForEach-Object { Write-Output $_ }
+          if (-not ($versionOutput -match '^recallbase ')) { throw "Compiled Windows CLI did not enter normal command mode." }
           & .\dist\rb.exe extension install-host --chromium-registry-root "HKCU\Software\FreshBrowser\Browser\NativeMessagingHosts" --json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & .\dist\rb.exe extension verify-host --json
