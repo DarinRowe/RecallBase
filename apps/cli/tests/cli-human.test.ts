@@ -71,6 +71,10 @@ describe("CLI human output", () => {
       "extension-host",
       "--parent-window=42"
     ]);
+    expect(defaultArgv(
+      ["C:\\Users\\Example\\.recallbase\\extension-host.exe", "B:\\~BUN\\root\\cli.js", "--parent-window=42"],
+      "C:\\Users\\Example\\.recallbase\\extension-host.exe"
+    )).toEqual(["extension-host", "--parent-window=42"]);
   });
 
   test("compiled Bun virtual paths run the CLI entrypoint on every platform", () => {

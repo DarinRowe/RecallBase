@@ -22,9 +22,11 @@ export interface RunResult {
   stdout: string;
 }
 
-export function defaultArgv(argv = Bun.argv): string[] {
-  if (isExtensionHostExecutable(argv[1]) || isExtensionHostExecutable(argv[0])) {
-    return ["extension-host", ...argv.slice(isExtensionHostExecutable(argv[1]) ? 2 : 1)];
+export function defaultArgv(argv = Bun.argv, executablePath = process.execPath): string[] {
+  if (isExtensionHostExecutable(executablePath)
+    || isExtensionHostExecutable(argv[1])
+    || isExtensionHostExecutable(argv[0])) {
+    return ["extension-host", ...argv.slice(2)];
   }
   return argv.slice(2);
 }
