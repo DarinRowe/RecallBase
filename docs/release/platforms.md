@@ -53,14 +53,14 @@ rb backup --out recallbase-backup.json --json
 - Native-host CI targets: real compiled host installs on macOS latest, Windows latest, and Linux latest, plus POSIX source-host execution with a GUI-safe `PATH`.
 - GitHub Release and npm publishing are gated on executing each exact packaged native-host binary and the user-facing npm shim on Linux x64/arm64, macOS Intel/Apple Silicon, and Windows x64 runners.
 - GitHub Release CLI targets: `darwin-arm64`, `darwin-x64`, `linux-arm64`, `linux-x64`, and `win32-x64`.
-- npm targets: one package, `recallbase`, with the public version plus platform versions such as `0.1.7-darwin-arm64`, `0.1.7-linux-x64`, and `0.1.7-win32-x64`.
+- npm targets: one package, `recallbase`, with the public version plus platform versions such as `X.Y.Z-darwin-arm64`, `X.Y.Z-linux-x64`, and `X.Y.Z-win32-x64`.
 - Native-host install targets: Chrome, Chromium, Microsoft Edge, and Firefox per-user locations on macOS/Linux/Windows; Chrome for Testing per-user locations on macOS/Linux; safely auto-discovered Chromium profile directories on macOS/Linux; standard plus already-established browser-specific Windows HKCU registrations with compiled `rb.exe`; and persistent explicit user-data/registry targets for every Chromium fork whose product-specific location cannot be inferred safely.
 - Linux prebuilt targets require glibc. musl/Alpine users must currently run the package source with Bun; do not route them to the glibc binary.
 - Source fallback target: any platform that can run Bun 1.3.14 and satisfy the SQLite/FTS requirement.
 
 ## Publishing Notes
 
-`recallbase` is available on npm as of May 22, 2026. npm publishing uses Trusted Publishing/OIDC, not a long-lived npm token. The package follows the Codex CLI pattern: `recallbase@0.1.7` is the command shim, and platform binaries are separate versions of the same package referenced through npm alias optional dependencies.
+`recallbase` is available on npm as of May 22, 2026. npm publishing uses Trusted Publishing/OIDC, not a long-lived npm token. The package follows the Codex CLI pattern: `recallbase@X.Y.Z` is the command shim, and platform binaries are separate versions of the same package referenced through npm alias optional dependencies.
 
 The trusted publisher for `recallbase` is configured as:
 
@@ -72,17 +72,17 @@ The trusted publisher for `recallbase` is configured as:
 
 Run the `Release` workflow manually with `version=v<package-version>` and `publish_npm=true`. The workflow uses Node 24, npm 11+, and `id-token: write` to publish platform versions first, then the `recallbase` shim version. Platform versions are published with per-target dist-tags (`darwin-arm64`, `darwin-x64`, `linux-arm64`, `linux-x64`, `win32-x64`); the shim version is published as `latest`.
 
-`CHANGELOG.md` is the single source for user-facing changes. Stable packaging extracts the exact `## [<package-version>]` section into the GitHub Release notes and fails before publishing when that section is missing or empty. Test releases keep generic dogfooding notes and do not require a versioned changelog entry.
+`CHANGELOG.md` is the single source for user-facing changes. Every pull request must update `[Unreleased]` or include `Release-Note: none - <reason>` in its body; the lightweight `Release Note` workflow enforces that decision before merge. Prepare a stable version with `bun run release:prepare -- --version=X.Y.Z`. The command moves the complete `[Unreleased]` section into the new version and synchronizes package, CLI, plugin, Gemini, and lockfile versions. Stable packaging then extracts that exact version section into GitHub Release notes and fails when it is missing or empty. Test releases keep generic dogfooding notes and do not require a versioned changelog entry.
 
 The current npm dist-tags should look like:
 
 ```text
-latest        -> 0.1.7
-darwin-arm64  -> 0.1.7-darwin-arm64
-darwin-x64    -> 0.1.7-darwin-x64
-linux-arm64   -> 0.1.7-linux-arm64
-linux-x64     -> 0.1.7-linux-x64
-win32-x64     -> 0.1.7-win32-x64
+latest        -> X.Y.Z
+darwin-arm64  -> X.Y.Z-darwin-arm64
+darwin-x64    -> X.Y.Z-darwin-x64
+linux-arm64   -> X.Y.Z-linux-arm64
+linux-x64     -> X.Y.Z-linux-x64
+win32-x64     -> X.Y.Z-win32-x64
 ```
 
 The first npm publish was completed manually with a short-lived token because npm requires an existing package before Trusted Publishing can be configured. Future publishes should use the workflow path above.
@@ -97,9 +97,10 @@ Homebrew distribution is not public yet. Do not advertise a `brew install` comma
 Manual release packaging commands:
 
 ```bash
-bun run scripts/package-release.ts --version=v0.1.7 --cli-targets=all
-bun run scripts/package-npm.ts --version=0.1.7 --targets=all
-bun run scripts/package-homebrew.ts --version=v0.1.7 --repo=DarinRowe/RecallBase
+bun run release:prepare -- --version=X.Y.Z
+bun run scripts/package-release.ts --version=vX.Y.Z --cli-targets=all
+bun run scripts/package-npm.ts --version=X.Y.Z --targets=all
+bun run scripts/package-homebrew.ts --version=vX.Y.Z --repo=DarinRowe/RecallBase
 ```
 
 ## Known Limits

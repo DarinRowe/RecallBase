@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Pull requests now require an explicit release-note decision, and one release preparation command moves all accumulated changes while synchronizing version metadata.
+
 ## [0.1.8] - 2026-08-21
 
 ### Added
@@ -14,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Native-host installation now automatically discovers established Chromium forks on macOS and Linux, plus existing per-user native-messaging roots on Windows.
 - Added persistent explicit registration for nonstandard Chromium forks, including verify and clear operations, so new forks do not require code changes.
 - Installed Firefox channels are now reported individually while sharing Mozilla's native-messaging manifest.
+- Added local Cursor Desktop and Agent CLI history import from main-agent transcripts with deduplication, incremental updates, and explicit root support.
 
 ### Fixed
 
@@ -23,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - GitHub Release notes are now generated from the matching changelog version, and stable packaging fails when that entry is missing or empty.
 - CI and release smoke tests now exercise compiled native hosts and browser-fork registration across macOS, Linux, and Windows.
+
+### Security
+
+- Cursor imports exclude subagents, thinking, tool and status payloads, terminal and file contents, opaque CLI data, application state, derived indexes, and cloud or background history.
 
 ## [0.1.7] - 2026-08-21
 

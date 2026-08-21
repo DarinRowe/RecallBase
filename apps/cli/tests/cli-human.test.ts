@@ -4,12 +4,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalDatabase } from "@recallbase/core";
 import { defaultArgv, isCliEntrypoint, runCommand } from "../src/cli";
+import packageJson from "../../../package.json";
 
 describe("CLI human output", () => {
   test("reports the package version without opening the database", async () => {
     const result = await runCommand(["--version"], { ...process.env, RECALLBASE_DB: "/not/a/real/database.sqlite" });
 
-    expect(result).toEqual({ code: 0, stdout: "recallbase 0.1.8\n" });
+    expect(result).toEqual({ code: 0, stdout: `recallbase ${packageJson.version}\n` });
   });
 
   test("shows subcommand help without opening the database or searching", async () => {
