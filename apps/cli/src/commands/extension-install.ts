@@ -818,6 +818,14 @@ function normalizeWindowsNativeMessagingRoot(root: string): string | undefined {
   return normalized;
 }
 
+export function windowsNativeMessagingRootFromRegistryLine(line: string): string | undefined {
+  const normalized = line.trim()
+    .replace(/^HKEY_CURRENT_USER\\/i, "HKCU\\")
+    .replace(/^HKCU\\SOFTWARE\\/i, "HKCU\\Software\\");
+  const match = /^(HKCU\\Software\\.+?\\NativeMessagingHosts)(?:\\.*)?$/i.exec(normalized);
+  return match ? normalizeWindowsNativeMessagingRoot(match[1]!) : undefined;
+}
+
 function windowsBrowserLabel(registryRoot: string): string {
   const productPath = registryRoot
     .replace(/^HKCU\\Software\\/i, "")
@@ -929,7 +937,7 @@ class WindowsRegistry implements NativeHostRegistry {
     });
     if (!result.success) return [];
     const roots = result.stdout.toString().split(/\r?\n/)
-      .map((line) => normalizeWindowsNativeMessagingRoot(line))
+      .map((line) => windowsNativeMessagingRootFromRegistryLine(line))
       .filter((root): root is string => root !== undefined);
     return [...new Set(roots)].sort((left, right) => left.localeCompare(right));
   }

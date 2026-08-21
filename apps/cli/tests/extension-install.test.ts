@@ -17,7 +17,8 @@ import {
   nativeHostRegistryKey,
   nativeHostWrapperPath,
   nativeManifestTargets,
-  resolveNativeHostLaunch
+  resolveNativeHostLaunch,
+  windowsNativeMessagingRootFromRegistryLine
 } from "../src/commands/extension-install";
 
 class MemoryRegistry {
@@ -568,7 +569,8 @@ describe("extension native host install manifests", () => {
     const homeDir = "/home/example";
     const targets = nativeManifestTargets("/home/example/.recallbase/extension-host", {}, {
       homeDir,
-      platform: "linux"
+      platform: "linux",
+      env: {}
     });
     const chromeTarget = targets.find((target) => target.browser === "chrome");
     const chromeForTestingTarget = targets.find((target) => target.browser === "chrome-for-testing");
@@ -658,6 +660,20 @@ describe("extension native host install manifests", () => {
     const brave = targets.find((target) => target.browserLabel === "BraveSoftware/Brave");
     expect(brave?.registryKey).toBe(`${registryRoot}\\ai.recallbase.extension_host`);
     expect(brave?.manifestPath).toBe("C:\\Users\\Example\\AppData\\Local\\RecallBase\\NativeMessagingHosts\\ai.recallbase.extension_host.chromium.json");
+  });
+
+  test("extracts a Windows native-messaging root from reg query parent or child keys", () => {
+    const expected = "HKCU\\Software\\ExampleBrowser\\Browser\\NativeMessagingHosts";
+
+    expect(windowsNativeMessagingRootFromRegistryLine(
+      "HKEY_CURRENT_USER\\Software\\ExampleBrowser\\Browser\\NativeMessagingHosts"
+    )).toBe(expected);
+    expect(windowsNativeMessagingRootFromRegistryLine(
+      "HKEY_CURRENT_USER\\Software\\ExampleBrowser\\Browser\\NativeMessagingHosts\\existing_host"
+    )).toBe(expected);
+    expect(windowsNativeMessagingRootFromRegistryLine(
+      "HKEY_LOCAL_MACHINE\\Software\\ExampleBrowser\\Browser\\NativeMessagingHosts\\existing_host"
+    )).toBeUndefined();
   });
 
   test("accepts a fresh explicit Windows Chromium registry root without prior registration", async () => {
