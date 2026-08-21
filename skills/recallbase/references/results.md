@@ -33,3 +33,5 @@ rb search "<query>" --json --limit <count>
 ```
 
 Prefer a precise query containing distinctive nouns, exact errors, filenames, commands, or decision language. Broaden only after a narrow search fails.
+
+Read ranked results first. Inspect `sourceCoverage` when results are empty, incomplete, or need a coverage qualification.

@@ -160,7 +160,8 @@ npx skills update recallbase --global
 | OpenAI Codex CLI | ✅ Core      |
 | Claude Code      | ✅ Core      |
 | GitHub Copilot   | ✅ Supported |
-| opencode         | ✅ Supported |
+| Kimi Code        | ✅ Supported |
+| OpenCode         | ✅ Supported |
 
 ### Web AI - Browser Extension
 

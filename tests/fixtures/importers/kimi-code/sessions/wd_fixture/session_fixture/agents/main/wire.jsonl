@@ -1,0 +1,13 @@
+{"type":"metadata","protocol_version":4,"created_at":1782147600000}
+{"type":"context.append_message","message":{"role":"user","content":[{"type":"text","text":"Add a focused Kimi Code history importer."}],"toolCalls":[],"origin":{"kind":"user"},"id":"message-user-1"},"time":1782147601000}
+{"type":"context.append_loop_event","event":{"type":"step.begin","uuid":"step-1","turnId":"turn-1","step":0},"time":1782147602000}
+{"type":"llm.request","model":"kimi-k2.5","modelAlias":"kimi-for-coding","turnStep":0,"time":1782147603000}
+{"type":"context.append_loop_event","event":{"type":"content.part","uuid":"event-think","turnId":"turn-1","step":0,"stepUuid":"step-1","part":{"type":"think","think":"PRIVATE_CHAIN_OF_THOUGHT_SENTINEL"}},"time":1782147604000}
+{"type":"context.append_loop_event","event":{"type":"tool.call","uuid":"event-call","turnId":"turn-1","step":0,"stepUuid":"step-1","toolCallId":"tool-1","name":"Shell","args":{"command":"SECRET_TOOL_ARGUMENT_SENTINEL"}},"time":1782147605000}
+{"type":"context.append_loop_event","event":{"type":"tool.result","parentUuid":"event-call","toolCallId":"tool-1","result":{"output":"SECRET_TOOL_OUTPUT_SENTINEL","isError":false}},"time":1782147606000}
+{"type":"context.append_loop_event","event":{"type":"content.part","uuid":"event-text","turnId":"turn-1","step":0,"stepUuid":"step-1","part":{"type":"text","text":"Implemented the importer around the documented wire event stream."}},"time":1782147607000}
+{"type":"context.append_loop_event","event":{"type":"step.end","uuid":"step-1","turnId":"turn-1","step":0,"finishReason":"stop","messageId":"message-assistant-1"},"time":1782147608000}
+{"type":"context.append_message","message":{"role":"user","content":[{"type":"text","text":"INTERNAL_INJECTION_SENTINEL"}],"toolCalls":[],"origin":{"kind":"injection","variant":"todo_list_reminder"}},"time":1782147660000}
+{"type":"context.append_message","message":{"role":"user","content":[{"type":"text","text":"<system-reminder>INTERNAL_REMINDER_SENTINEL</system-reminder>"}],"toolCalls":[]},"time":1782147661000}
+{"type":"context.append_message","message":{"role":"user","content":[{"type":"text","text":"Verify that only useful conversation text is searchable."}],"toolCalls":[],"origin":{"kind":"user"},"id":"message-user-2"},"time":1782147720000}
+{"type":"context.append_message","message":{"role":"assistant","content":[{"type":"think","think":"MIGRATED_PRIVATE_THINKING_SENTINEL"},{"type":"text","text":"The searchable transcript excludes tool payloads and private reasoning."}],"toolCalls":[]},"time":1782147780000}

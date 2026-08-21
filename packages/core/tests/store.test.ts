@@ -205,6 +205,7 @@ describe("local store", () => {
     expect(db.open("conv_old")).toMatchObject({
       messages: [{ text: "Old row" }]
     });
+    expect(db.search("Old row")).toHaveLength(1);
     db.close();
   });
 

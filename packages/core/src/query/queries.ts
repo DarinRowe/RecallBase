@@ -53,7 +53,7 @@ export function querySearch(
     query,
     filters,
     results: db.search(query, options),
-    sourceCoverage: db.sources()
+    sourceCoverage: db.sources(options.sourceId)
   });
 }
 

@@ -1,6 +1,6 @@
 ---
 name: recallbase
-description: Recover context from local AI conversation history with RecallBase. Use for same-day work summaries, resuming prior AI or coding sessions, or tracing a past decision to its source.
+description: Recover evidence from local AI conversation history with RecallBase. Use for same-day work summaries, resuming prior sessions, or finding a past recommendation or decision and its source.
 license: MIT
 metadata:
   author: Darin Rowe
@@ -18,8 +18,11 @@ This workflow requires the local `rb` CLI on `PATH` and a RecallBase store popul
    - Same-day continuity: `rb today --json`
    - A known topic, error, file, branch, command, or decision: `rb search "<specific query>" --json`
    - Suspected coverage gaps: `rb sources --json`
-2. Inspect the JSON envelope. Continue only from `ok: true`; for `ok: false`, use `error.code`, `message`, and `hint` to explain or recover.
-3. Open only the strongest candidate conversations with `rb open <conversation-id> --json`. Search results also provide the stable reference `recallbase:conversation/<id>`.
+2. Apply user-supplied source and date constraints immediately. Start with the user's exact language. If it misses, use a query ladder: core concept, then known UI label, filename, command, or code identifier. Expand one dimension at a time and retain the constraints.
+3. Inspect the JSON envelope. Continue only from `ok: true`; for `ok: false`, use `error.code`, `message`, and `hint` to explain or recover.
+4. Open only the strongest candidate conversations with `rb open <conversation-id> --json`. Search results also provide the stable reference `recallbase:conversation/<id>`.
+
+Search results are candidates; opened messages are evidence. An incidental implementation mention does not establish a recommendation or decision.
 
 Retrieval is complete when the evidence answers the question or the available source coverage proves the relevant history is absent or incomplete.
 
@@ -102,6 +105,8 @@ rb search "<query>" --json --limit <count>
 
 Prefer a precise query containing distinctive nouns, exact errors, filenames, commands, or decision language. Broaden only after a narrow search fails.
 
+Read ranked results first. Inspect `sourceCoverage` when results are empty, incomplete, or need a coverage qualification.
+
 ---
 
 # Troubleshooting
@@ -114,6 +119,8 @@ Read this file when the CLI is unavailable, results are empty or incomplete, imp
 2. Run `rb sources --json` and inspect health, counts, import times, and diagnostics.
 3. Run `rb import --json` when known local sources have not been imported. It skips unchanged sources; use `rb import --force --json` only when a full re-import is required. `today` and non-empty `search` queries normally refresh known default sources automatically; explicit database paths, explicit roots, and `--no-refresh` suppress that refresh.
 4. Retry the narrow query. Stop when results are available or the source status identifies the missing coverage.
+
+For Kimi Code, the source ID is `kimi-code` and the default data root is `~/.kimi-code/` (or `$KIMI_CODE_HOME`). RecallBase reads `sessions/*/*/state.json` and `sessions/*/*/agents/main/wire.jsonl`; it does not use the legacy `~/.kimi/` tree. It indexes the user-visible main-agent conversation and excludes private thinking, tool payloads, subagent streams, and internal injections.
 
 If `rb` is not installed, report that prerequisite. Install it only within the user's authorization; the standard package command is `npm install -g recallbase`.
 

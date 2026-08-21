@@ -71,7 +71,7 @@ export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = 
 
 export async function main(argv = defaultArgv()): Promise<number> {
   const result = await runCommand(argv);
-  process.stdout.write(result.stdout);
+  await Bun.write(Bun.stdout, result.stdout);
   return result.code;
 }
 

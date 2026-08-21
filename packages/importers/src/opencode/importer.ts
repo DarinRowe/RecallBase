@@ -8,11 +8,11 @@ import type { SourceDiscoveryResult, SourceImporter } from "../common/importer";
 import { asIsoDate, asString } from "../common/json";
 
 const SOURCE_ID = "opencode";
-const SOURCE_LABEL = "opencode";
+const SOURCE_LABEL = "OpenCode";
 
 type Row = Record<string, unknown>;
 
-export function createOpencodeImporter(): SourceImporter {
+export function createOpenCodeImporter(): SourceImporter {
   return {
     id: SOURCE_ID,
     label: SOURCE_LABEL,
@@ -28,7 +28,7 @@ export function createOpencodeImporter(): SourceImporter {
             SOURCE_ID,
             "info",
             "opencode_experimental",
-            "opencode importer is experimental because fixture coverage only covers the observed SQLite session/message/part tables."
+            "OpenCode importer is experimental because fixture coverage only covers the observed SQLite session/message/part tables."
           )
         );
       }
@@ -38,14 +38,14 @@ export function createOpencodeImporter(): SourceImporter {
         paths,
         present: paths.length > 0,
         confidence: "experimental",
-        confidenceReason: "Fixture coverage covers observed opencode SQLite session, message, part, workspace, and project tables.",
+        confidenceReason: "Fixture coverage covers observed OpenCode SQLite session, message, part, workspace, and project tables.",
         diagnostics
       };
       if (paths.length > 0) result.schemaFingerprint = await fileSchemaFingerprint(paths);
       return result;
     },
     importFromPaths(paths, options) {
-      return importOpencodePaths(paths, options?.discovery);
+      return importOpenCodePaths(paths, options?.discovery);
     }
   };
 }
@@ -59,7 +59,7 @@ async function opencodeDbPath(): Promise<string | undefined> {
   }
 }
 
-async function importOpencodePaths(paths: string[], discovery?: SourceDiscoveryResult): Promise<ImportBatchInput> {
+async function importOpenCodePaths(paths: string[], discovery?: SourceDiscoveryResult): Promise<ImportBatchInput> {
   const conversations: NormalizedConversationInput[] = [];
   const diagnostics: Diagnostic[] = [...(discovery?.diagnostics ?? [])];
   const fingerprints: unknown[] = [];
@@ -76,7 +76,7 @@ async function importOpencodePaths(paths: string[], discovery?: SourceDiscoveryR
       }
     } catch (error) {
       diagnostics.push(
-        diagnostic(SOURCE_ID, "error", "opencode_database_unreadable", `Could not read opencode database: ${errorMessage(error)}.`, path)
+        diagnostic(SOURCE_ID, "error", "opencode_database_unreadable", `Could not read OpenCode database: ${errorMessage(error)}.`, path)
       );
     }
   }
@@ -88,7 +88,7 @@ async function importOpencodePaths(paths: string[], discovery?: SourceDiscoveryR
     diagnostics,
     schemaFingerprint: discovery?.schemaFingerprint ?? schemaFingerprint(fingerprints),
     confidence: "experimental",
-    confidenceReason: "Fixture coverage covers observed opencode SQLite session, message, part, workspace, and project tables."
+    confidenceReason: "Fixture coverage covers observed OpenCode SQLite session, message, part, workspace, and project tables."
   };
 }
 
@@ -112,7 +112,7 @@ function normalizeDatabase(path: string, db: Database, schema: Record<string, st
         SOURCE_ID,
         "error",
         "opencode_schema_unsupported",
-        "opencode database is missing required session or message tables.",
+        "OpenCode database is missing required session or message tables.",
         path
       )
     );
@@ -136,7 +136,7 @@ function normalizeDatabase(path: string, db: Database, schema: Record<string, st
       .filter((message): message is NormalizedMessageInput => message !== undefined);
     if (normalizedMessages.length === 0) {
       diagnostics.push(
-        diagnostic(SOURCE_ID, "warning", "opencode_no_messages", "opencode session had no importable messages.", rawUri)
+        diagnostic(SOURCE_ID, "warning", "opencode_no_messages", "OpenCode session had no importable messages.", rawUri)
       );
       return undefined;
     }
@@ -153,7 +153,7 @@ function normalizeDatabase(path: string, db: Database, schema: Record<string, st
       sourceId: SOURCE_ID,
       sourceLabel: SOURCE_LABEL,
       upstreamId: sessionId,
-      title: titleFromText(title, `opencode ${sessionId}`),
+      title: titleFromText(title, `OpenCode ${sessionId}`),
       startedAt,
       updatedAt,
       messages: dedupeMessages(normalizedMessages),

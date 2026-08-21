@@ -1,0 +1,1 @@
+{"type":"context.append_message","message":{"role":"user","content":[{"type":"text","text":"SUBAGENT_TRANSCRIPT_SENTINEL"}],"toolCalls":[],"origin":{"kind":"user"}},"time":1782147601000}

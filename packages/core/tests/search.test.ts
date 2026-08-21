@@ -48,6 +48,67 @@ describe("queries", () => {
     }
   });
 
+  test("searches Unicode scripts without language-specific dependencies", () => {
+    const db = new LocalDatabase();
+    db.importBatch({
+      sourceId: "kimi-code",
+      sourceLabel: "Kimi Code",
+      confidence: "stable",
+      confidenceReason: "test fixture",
+      conversations: [
+        {
+          sourceId: "kimi-code",
+          sourceLabel: "Kimi Code",
+          upstreamId: "multilingual-search",
+          title: "Worldwide search",
+          startedAt: "2026-05-21T09:00:00.000Z",
+          updatedAt: "2026-05-21T09:30:00.000Z",
+          rawEvidence: [],
+          messages: [
+            {
+              role: "assistant",
+              createdAt: "2026-05-21T09:00:00.000Z",
+              text: "评分提示应该在成功导出后出现。評価コメントを確認。한국어 검색. ความคิดเห็นคะแนน. تقييم التعليقات. Привет мир. café résumé. उपयोगकर्ता इतिहास. RecallBase"
+            }
+          ]
+        }
+      ]
+    });
+
+    for (const query of [
+      "评分提示",
+      "评分",
+      "評価コメント",
+      "한국어",
+      "ความคิดเห็น",
+      "تقييم",
+      "Привет",
+      "cafe",
+      "उपयोगकर्ता",
+      "ＲｅｃａｌｌＢａｓｅ"
+    ]) {
+      expect(db.search(query), query).toHaveLength(1);
+    }
+    expect(db.search("评分", { sourceId: "codex" })).toEqual([]);
+    expect(db.search("评分", { date: "2026-05-22" })).toEqual([]);
+  });
+
+  test("source-filtered search returns only matching source coverage", () => {
+    const db = seededDb();
+    db.importBatch({
+      sourceId: "codex",
+      sourceLabel: "Codex",
+      confidence: "stable",
+      confidenceReason: "test fixture",
+      conversations: [],
+      diagnostics: []
+    });
+
+    const result = querySearch(db, "diagnostics", { sourceId: "claude-code" });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.sourceCoverage.map((source) => source.id)).toEqual(["claude-code"]);
+  });
+
   test("today groups same-day sessions and continuation hints", () => {
     const db = seededDb();
     const result = queryToday(db, "2026-05-21");

@@ -9,12 +9,20 @@ export function makeSnippet(text: string, query = "", maxLength = 220): string {
   return `${start > 0 ? "..." : ""}${snippet}${start + maxLength < normalized.length ? "..." : ""}`;
 }
 
+export function normalizeSearchText(value: string): string {
+  return value.normalize("NFKC");
+}
+
 export function toFtsQuery(query: string): string | undefined {
-  const terms = query
-    .trim()
-    .split(/\s+/)
-    .map((term) => term.replace(/[^a-zA-Z0-9_-]/g, ""))
-    .filter(Boolean);
+  const terms = queryTerms(query);
   if (terms.length === 0) return undefined;
-  return terms.map((term) => `"${term}"`).join(" AND ");
+  return terms.map(quoteFtsTerm).join(" AND ");
+}
+
+export function queryTerms(query: string): string[] {
+  return normalizeSearchText(query).trim().split(/\s+/u).filter(Boolean);
+}
+
+function quoteFtsTerm(term: string): string {
+  return `"${term.replaceAll('"', '""')}"`;
 }

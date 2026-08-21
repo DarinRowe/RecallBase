@@ -2,6 +2,8 @@
 
 RecallBase V1 is local-first. Import, search, today, open, sources, and backup run entirely on your device without login or network access.
 
+The Kimi Code local importer reads only main-agent session state and wire records. It indexes user-visible prompts and assistant-visible text, but does not index private thinking, tool payloads or results, subagent streams, system prompts, logs, tasks, or credentials.
+
 ## Browser Extension
 
 Browser extension capture follows the same local-first boundary. The supported sites are ChatGPT, Claude, Gemini, DeepSeek, Kimi, Qwen, Doubao, Tencent Yuanbao, Grok, Perplexity, NotebookLM, Google AI Studio, GitHub Copilot, and Microsoft Copilot.
