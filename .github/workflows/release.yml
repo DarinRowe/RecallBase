@@ -24,8 +24,8 @@ permissions:
 jobs:
   build:
     runs-on: macos-latest
-    permissions:
-      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
@@ -33,7 +33,7 @@ jobs:
           bun-version: "1.3.14"
       - run: bun install
       - run: bun run typecheck
-      - run: bun test tests/packaging
+      - run: bun test
       - name: Resolve version
         id: version
         run: |
@@ -45,19 +45,10 @@ jobs:
       - run: bun run scripts/package-release.ts --version="${{ steps.version.outputs.version }}" --cli-targets=all
       - run: bun run scripts/package-npm.ts --version="${{ steps.version.outputs.version }}" --targets=all
       - run: bun run scripts/package-homebrew.ts --version="${{ steps.version.outputs.version }}" --repo="${{ github.repository }}"
-      - name: Publish GitHub release assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          if gh release view "$VERSION" >/dev/null 2>&1; then
-            gh release upload "$VERSION" ".artifacts/release/$VERSION/"* --clobber
-          else
-            gh release create "$VERSION" ".artifacts/release/$VERSION/"* \
-              --target "$GITHUB_SHA" \
-              --title "RecallBase $VERSION" \
-              --notes-file ".artifacts/release/$VERSION/release-notes.md"
-          fi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: recallbase-release-assets
+          path: .artifacts/release/${{ steps.version.outputs.version }}/*
       - uses: actions/upload-artifact@v7
         with:
           name: recallbase-npm-packages
@@ -67,8 +58,166 @@ jobs:
           name: recallbase-homebrew-cask
           path: .artifacts/homebrew/Casks/recallbase.rb
 
-  publish-npm:
+  verify-native-host:
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            release_target: x86_64-unknown-linux-gnu
+            npm_suffix: linux-x64
+            expected_arch: x86_64
+          - os: ubuntu-24.04-arm
+            release_target: aarch64-unknown-linux-gnu
+            npm_suffix: linux-arm64
+            expected_arch: aarch64
+          - os: macos-15-intel
+            release_target: x86_64-apple-darwin
+            npm_suffix: darwin-x64
+            expected_arch: x86_64
+          - os: macos-14
+            release_target: aarch64-apple-darwin
+            npm_suffix: darwin-arm64
+            expected_arch: arm64
+          - os: windows-latest
+            release_target: x86_64-pc-windows-msvc
+            npm_suffix: win32-x64
+            expected_arch: AMD64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: recallbase-release-assets
+          path: release-assets
+      - uses: actions/download-artifact@v8
+        with:
+          name: recallbase-npm-packages
+          path: npm-packages
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Verify archived native host on POSIX
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          RELEASE_TARGET: ${{ matrix.release_target }}
+          NPM_SUFFIX: ${{ matrix.npm_suffix }}
+          VERSION: ${{ needs.build.outputs.version }}
+          EXPECTED_ARCH: ${{ matrix.expected_arch }}
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "$EXPECTED_ARCH"
+          archive="release-assets/recallbase-${RELEASE_TARGET}-${VERSION}.tar.gz"
+          test -f "$archive"
+          mkdir extracted
+          tar -xzf "$archive" -C extracted
+          export HOME="$RUNNER_TEMP/recallbase-native-host"
+          export XDG_CONFIG_HOME="$HOME/.config"
+          custom_profile="$RUNNER_TEMP/release-custom-${NPM_SUFFIX}"
+          mkdir -p "$custom_profile/Default"
+          printf '{}\n' > "$custom_profile/Local State"
+          printf '{}\n' > "$custom_profile/Default/Preferences"
+          ./extracted/rb --version
+          ./extracted/rb extension install-host --chromium-user-data-dir "$custom_profile"
+          ./extracted/rb extension verify-host
+          npm_archive=$(find npm-packages -type f -name "recallbase-*-${NPM_SUFFIX}.tgz" -print -quit)
+          meta_archive=$(find npm-packages -type f -name 'recallbase-*.tgz' \
+            ! -name '*-darwin-*.tgz' ! -name '*-linux-*.tgz' ! -name '*-win32-*.tgz' -print -quit)
+          test -n "$npm_archive"
+          test -n "$meta_archive"
+          mkdir npm-extracted
+          tar -xzf "$npm_archive" -C npm-extracted
+          export HOME="$RUNNER_TEMP/recallbase-npm-native-host"
+          export XDG_CONFIG_HOME="$HOME/.config"
+          ./npm-extracted/package/bin/rb --version
+          ./npm-extracted/package/bin/rb extension install-host --chromium-user-data-dir "$custom_profile"
+          ./npm-extracted/package/bin/rb extension verify-host
+          mkdir -p "npm-shim/node_modules/recallbase" "npm-shim/node_modules/recallbase-${NPM_SUFFIX}"
+          tar -xzf "$meta_archive" -C "npm-shim/node_modules/recallbase" --strip-components=1
+          tar -xzf "$npm_archive" -C "npm-shim/node_modules/recallbase-${NPM_SUFFIX}" --strip-components=1
+          node npm-shim/node_modules/recallbase/bin/recallbase.cjs --version
+          node npm-shim/node_modules/recallbase/bin/recallbase.cjs extension install-host --chromium-user-data-dir "$custom_profile"
+          node npm-shim/node_modules/recallbase/bin/recallbase.cjs extension verify-host
+      - name: Verify archived native host on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          RELEASE_TARGET: ${{ matrix.release_target }}
+          NPM_SUFFIX: ${{ matrix.npm_suffix }}
+          VERSION: ${{ needs.build.outputs.version }}
+          EXPECTED_ARCH: ${{ matrix.expected_arch }}
+        run: |
+          if ($env:PROCESSOR_ARCHITECTURE -ne $env:EXPECTED_ARCH) { throw "Unexpected runner architecture $env:PROCESSOR_ARCHITECTURE" }
+          $archive = "release-assets/recallbase-$env:RELEASE_TARGET-$env:VERSION.tar.gz"
+          if (-not (Test-Path $archive)) { throw "Missing $archive" }
+          New-Item -ItemType Directory -Force extracted | Out-Null
+          tar -xzf $archive -C extracted
+          $env:USERPROFILE = Join-Path $env:RUNNER_TEMP "recallbase-native-host"
+          $env:LOCALAPPDATA = Join-Path $env:USERPROFILE "AppData\Local"
+          $releaseRegistryRoot = "HKCU\Software\RecallBaseReleaseFixture\Archive\NativeMessagingHosts"
+          & .\extracted\rb.exe --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\extracted\rb.exe extension install-host --chromium-registry-root $releaseRegistryRoot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\extracted\rb.exe extension verify-host
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $npmArchive = Get-ChildItem npm-packages -Recurse -File -Filter "recallbase-*-$env:NPM_SUFFIX.tgz" | Select-Object -First 1
+          $metaArchive = Get-ChildItem npm-packages -Recurse -File -Filter "recallbase-*.tgz" |
+            Where-Object { $_.Name -notmatch '-(darwin|linux|win32)-' } |
+            Select-Object -First 1
+          if (-not $npmArchive) { throw "Missing npm package for $env:NPM_SUFFIX" }
+          if (-not $metaArchive) { throw "Missing npm shim package" }
+          New-Item -ItemType Directory -Force npm-extracted | Out-Null
+          tar -xzf $npmArchive.FullName -C npm-extracted
+          $env:USERPROFILE = Join-Path $env:RUNNER_TEMP "recallbase-npm-native-host"
+          $env:LOCALAPPDATA = Join-Path $env:USERPROFILE "AppData\Local"
+          $npmRegistryRoot = "HKCU\Software\RecallBaseReleaseFixture\NpmBinary\NativeMessagingHosts"
+          & .\npm-extracted\package\bin\rb.exe --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\npm-extracted\package\bin\rb.exe extension install-host --chromium-registry-root $npmRegistryRoot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\npm-extracted\package\bin\rb.exe extension verify-host
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force "npm-shim\node_modules\recallbase" | Out-Null
+          New-Item -ItemType Directory -Force "npm-shim\node_modules\recallbase-$env:NPM_SUFFIX" | Out-Null
+          tar -xzf $metaArchive.FullName -C "npm-shim\node_modules\recallbase" --strip-components=1
+          tar -xzf $npmArchive.FullName -C "npm-shim\node_modules\recallbase-$env:NPM_SUFFIX" --strip-components=1
+          $shimRegistryRoot = "HKCU\Software\RecallBaseReleaseFixture\NpmShim\NativeMessagingHosts"
+          node .\npm-shim\node_modules\recallbase\bin\recallbase.cjs --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node .\npm-shim\node_modules\recallbase\bin\recallbase.cjs extension install-host --chromium-registry-root $shimRegistryRoot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node .\npm-shim\node_modules\recallbase\bin\recallbase.cjs extension verify-host
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  publish-release:
+    needs: [build, verify-native-host]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: recallbase-release-assets
+          path: release-assets
+      - name: Publish GitHub release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$VERSION" release-assets/* --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$VERSION" release-assets/* \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "RecallBase $VERSION" \
+              --notes-file release-assets/release-notes.md
+          fi
+
+  publish-npm:
+    needs: [build, verify-native-host]
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_npm }}
     runs-on: ubuntu-latest
     permissions:
@@ -108,7 +257,7 @@ jobs:
           npm publish "$meta_package" --access public
 
   update-homebrew:
-    needs: build
+    needs: [build, verify-native-host, publish-release]
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.homebrew_tap_repo != '' }}
     runs-on: ubuntu-latest
     steps:

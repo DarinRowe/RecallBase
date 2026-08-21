@@ -115,7 +115,7 @@ function formatImport(data: ImportResult): string {
 
 function formatExtensionHost(data: ExtensionHostInstallResult): string {
   const lines = data.manifests.map((manifest) =>
-    `${manifest.browser}: ${manifest.installed ? "installed" : "missing"} ${manifest.manifestPath}`
+    `${manifest.browserLabel ?? manifest.browser}: ${manifest.installed ? "installed" : "missing"} ${manifest.manifestPath}`
   );
   return `${lines.join("\n")}\n`;
 }

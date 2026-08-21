@@ -15,6 +15,9 @@ export interface CliFlags {
   context?: number;
   roots: string[];
   sourceIds: string[];
+  chromiumUserDataDirs: string[];
+  chromiumRegistryRoots: string[];
+  clearChromiumTargets: boolean;
   outPath?: string;
 }
 
@@ -26,6 +29,8 @@ export function parseFlags(args: string[], env: NodeJS.ProcessEnv = process.env)
   const rest: string[] = [];
   const roots: string[] = [];
   const sourceIds: string[] = [];
+  const chromiumUserDataDirs: string[] = [];
+  const chromiumRegistryRoots: string[] = [];
   const flags: CliFlags = {
     json: false,
     force: false,
@@ -33,7 +38,10 @@ export function parseFlags(args: string[], env: NodeJS.ProcessEnv = process.env)
     dbPath: defaultDbPath(env),
     dbPathExplicit: false,
     roots,
-    sourceIds
+    sourceIds,
+    chromiumUserDataDirs,
+    chromiumRegistryRoots,
+    clearChromiumTargets: false
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -64,6 +72,14 @@ export function parseFlags(args: string[], env: NodeJS.ProcessEnv = process.env)
     } else if (arg === "--source" && next) {
       sourceIds.push(next);
       index += 1;
+    } else if (arg === "--chromium-user-data-dir" && next) {
+      chromiumUserDataDirs.push(next);
+      index += 1;
+    } else if (arg === "--chromium-registry-root" && next) {
+      chromiumRegistryRoots.push(next);
+      index += 1;
+    } else if (arg === "--clear-chromium-targets") {
+      flags.clearChromiumTargets = true;
     } else if ((arg === "--out" || arg === "-o") && next) {
       flags.outPath = next;
       index += 1;

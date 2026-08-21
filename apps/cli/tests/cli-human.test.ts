@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalDatabase } from "@recallbase/core";
-import { defaultArgv, runCommand } from "../src/cli";
+import { defaultArgv, isCliEntrypoint, runCommand } from "../src/cli";
 
 describe("CLI human output", () => {
   test("reports the package version without opening the database", async () => {
@@ -21,6 +21,15 @@ describe("CLI human output", () => {
       stdout: "Usage: rb search <query> [--source <source-id>] [--date YYYY-MM-DD] [--limit 1-50] [--json]\n"
     });
     expect(existsSync(dbPath)).toBe(false);
+  });
+
+  test("documents universal Chromium fork registration flags", async () => {
+    const result = await runCommand(["extension", "--help"]);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("--chromium-user-data-dir <path>");
+    expect(result.stdout).toContain("--chromium-registry-root <HKCU-key>");
+    expect(result.stdout).toContain("--clear-chromium-targets");
   });
 
   test("native-host verification does not initialize the local database", async () => {
@@ -62,6 +71,17 @@ describe("CLI human output", () => {
       "extension-host",
       "--parent-window=42"
     ]);
+    expect(defaultArgv(
+      ["C:\\Users\\Example\\.recallbase\\extension-host.exe", "B:\\~BUN\\root\\cli.js", "--parent-window=42"],
+      "C:\\Users\\Example\\.recallbase\\extension-host.exe"
+    )).toEqual(["extension-host", "--parent-window=42"]);
+  });
+
+  test("compiled Bun virtual paths run the CLI entrypoint on every platform", () => {
+    expect(isCliEntrypoint(false, "/$bunfs/root/cli.js")).toBe(true);
+    expect(isCliEntrypoint(false, "B:\\~BUN\\root\\cli.js")).toBe(true);
+    expect(isCliEntrypoint(false, "/workspace/apps/cli/src/cli.ts")).toBe(false);
+    expect(isCliEntrypoint(true, "/workspace/apps/cli/src/cli.ts")).toBe(true);
   });
 
   test("human search shows plain-text metadata and a usable open command", async () => {

@@ -21,6 +21,8 @@ The local CLI imports, searches, opens, backs up, and exposes RecallBase data to
 
 When CLI commands, JSON shape, or command semantics change, update `../../skills/recallbase/SKILL.md`.
 
+Unknown Chromium forks can be registered once with `rb extension install-host --chromium-user-data-dir <absolute-path>` on macOS/Linux or `--chromium-registry-root <HKCU-key>` on Windows. Explicit targets are persisted for later plain `verify-host` calls; `--clear-chromium-targets` forgets the saved custom set.
+
 ## Search Boundary
 
 Search preserves Unicode text and uses the existing FTS ranking first. When token matching does not fill the requested result set, RecallBase performs a bounded substring pass with the same source and date constraints. This keeps common searches fast while supporting writing systems without whitespace-delimited words and partial terms without a language-specific tokenizer or external dependency.

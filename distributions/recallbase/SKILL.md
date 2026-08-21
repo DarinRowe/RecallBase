@@ -40,7 +40,7 @@ The response is complete when every material claim is grounded in retrieved hist
 ## Conditional references
 
 - Read [references/results.md](#result-reference) when interpreting unfamiliar fields, determining whether a conversation used a named external source, or building against the JSON contract.
-- Read [references/troubleshooting.md](#troubleshooting) when `rb` is unavailable, retrieval is empty or incomplete, imports fail, a full re-import is required, or browser capture setup is unhealthy.
+- Read [references/troubleshooting.md](#troubleshooting) when `rb` is unavailable, retrieval is empty or incomplete, imports fail, a full re-import is required, browser capture setup is unhealthy, or an unrecognized Chromium fork needs explicit native-host registration.
 
 ---
 
@@ -148,7 +148,21 @@ If setup is missing or stale and the user wants it repaired, run:
 rb extension install-host --json
 ```
 
-Installation changes per-user browser native-host configuration. It supports Chrome, Chrome for Testing on macOS/Linux, Edge, and Firefox. `RECALLBASE_CHROME_EXTENSION_ID` adds one exact alternate Chromium ID; `RECALLBASE_FIREFOX_EXTENSION_ID` replaces the default Firefox ID for alternate builds.
+Installation changes per-user browser native-host configuration. It supports Chrome, Chromium, Chrome for Testing on macOS/Linux, Edge, and Firefox. On macOS and Linux it also discovers established extension-capable Chromium profiles and registers all safe product directories in the same pass. On Windows it registers standard browser keys plus safe browser registry roots already used by native hosts. Users normally need only one command. Launch a newly installed browser once before rerunning `install-host` so profile-based discovery can see it. Official Firefox channels, including Developer Edition and Nightly, share Mozilla's per-user manifest and are listed together during verification. A later `verify-host` checks the same detected targets, so a newly installed browser can require rerunning `install-host`.
+
+For a Chromium fork that cannot be discovered automatically, register its exact browser-owned location once. On macOS or Linux, pass the absolute user-data directory containing `Local State` and a profile `Preferences` file:
+
+```bash
+rb extension install-host --chromium-user-data-dir <absolute-user-data-directory> --json
+```
+
+On Windows, pass the fork's per-user registry root ending in `NativeMessagingHosts`:
+
+```powershell
+rb extension install-host --chromium-registry-root 'HKCU\Software\Vendor\Browser\NativeMessagingHosts' --json
+```
+
+RecallBase saves explicit targets in `~/.recallbase/extension-host-targets.json`; later plain `verify-host` calls include them automatically. Used alone, `rb extension install-host --clear-chromium-targets` forgets all saved custom targets without deleting browser-owned directories or registry keys; on Windows, previously explicit roots remain ignored even though the registry entry still exists. Combining clear with new explicit target flags replaces the saved set in one command. `RECALLBASE_CHROME_EXTENSION_ID` adds one exact alternate Chromium ID; `RECALLBASE_FIREFOX_EXTENSION_ID` replaces the default Firefox ID for alternate builds.
 
 ## Safe diagnostics
 

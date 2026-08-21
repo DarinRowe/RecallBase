@@ -22,11 +22,19 @@ export interface RunResult {
   stdout: string;
 }
 
-export function defaultArgv(argv = Bun.argv): string[] {
-  if (isExtensionHostExecutable(argv[1]) || isExtensionHostExecutable(argv[0])) {
-    return ["extension-host", ...argv.slice(isExtensionHostExecutable(argv[1]) ? 2 : 1)];
+export function defaultArgv(argv = Bun.argv, executablePath = process.execPath): string[] {
+  if (isExtensionHostExecutable(executablePath)
+    || isExtensionHostExecutable(argv[1])
+    || isExtensionHostExecutable(argv[0])) {
+    return ["extension-host", ...argv.slice(2)];
   }
   return argv.slice(2);
+}
+
+export function isCliEntrypoint(importMetaMain: boolean, importMetaPath: string): boolean {
+  if (importMetaMain) return true;
+  const normalized = importMetaPath.replaceAll("\\", "/");
+  return normalized.includes("/$bunfs/") || /^[a-z]:\/~bun\//i.test(normalized);
 }
 
 export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = process.env): Promise<RunResult> {
@@ -41,7 +49,12 @@ export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = 
     return { code: 0, stdout: `recallbase ${packageJson.version}\n` };
   }
   if (command === "extension" && (rest[0] === "install-host" || rest[0] === "verify-host")) {
-    const result = await extensionInstallCommand(undefined, rest, { env });
+    const result = await extensionInstallCommand(undefined, rest, {
+      env,
+      chromiumUserDataDirs: flags.chromiumUserDataDirs,
+      chromiumRegistryRoots: flags.chromiumRegistryRoots,
+      clearChromiumTargets: flags.clearChromiumTargets
+    });
     return {
       code: result.ok ? 0 : 1,
       stdout: flags.json ? formatJson(result) : formatHuman(result)
@@ -71,7 +84,7 @@ export async function runCommand(argv = defaultArgv(), env: NodeJS.ProcessEnv = 
 
 export async function main(argv = defaultArgv()): Promise<number> {
   const result = await runCommand(argv);
-  await Bun.write(Bun.stdout, result.stdout);
+  if (result.stdout.length > 0) await Bun.write(Bun.stdout, result.stdout);
   return result.code;
 }
 
@@ -106,7 +119,7 @@ function commandHelp(command?: string): string {
     open: "rb open <conversation-id> [--message <message-id> [--context 0-5]] [--json]",
     sources: "rb sources [--json]",
     backup: "rb backup [--out <path>] [--json]",
-    extension: "rb extension <install-host|verify-host> [--json]",
+    extension: "rb extension <install-host|verify-host> [--chromium-user-data-dir <path>] [--chromium-registry-root <HKCU-key>] [--clear-chromium-targets] [--json]",
     "extension-host": "rb extension-host",
     mcp: "rb mcp",
     version: "rb version"
@@ -115,6 +128,6 @@ function commandHelp(command?: string): string {
   return "RecallBase commands: import, today, search, open, sources, backup, extension, extension-host, mcp, version\nRun rb <command> --help for usage.\n";
 }
 
-if (import.meta.main) {
+if (isCliEntrypoint(import.meta.main, import.meta.path)) {
   process.exit(await main());
 }
