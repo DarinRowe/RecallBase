@@ -71,6 +71,8 @@ The trusted publisher for `recallbase` is configured as:
 
 Run the `Release` workflow manually with `version=v<package-version>` and `publish_npm=true`. The workflow uses Node 24, npm 11+, and `id-token: write` to publish platform versions first, then the `recallbase` shim version. Platform versions are published with per-target dist-tags (`darwin-arm64`, `darwin-x64`, `linux-arm64`, `linux-x64`, `win32-x64`); the shim version is published as `latest`.
 
+`CHANGELOG.md` is the single source for user-facing changes. Stable packaging extracts the exact `## [<package-version>]` section into the GitHub Release notes and fails before publishing when that section is missing or empty. Test releases keep generic dogfooding notes and do not require a versioned changelog entry.
+
 The current npm dist-tags should look like:
 
 ```text

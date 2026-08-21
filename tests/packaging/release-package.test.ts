@@ -10,6 +10,7 @@ import {
   releaseArtifactNames,
   releaseVersion
 } from "../../scripts/package-release";
+import { renderReleaseNotes } from "../../scripts/release-notes";
 
 describe("release packaging metadata", () => {
   test("defaults to the package version for stable release artifacts", () => {
@@ -26,6 +27,58 @@ describe("release packaging metadata", () => {
     expect(releaseArtifactNames("v0.1.0-test.1")).toMatchObject({
       cli: expect.stringMatching(/^recallbase-.+-v0\.1\.0-test\.1\.tar\.gz$/)
     });
+  });
+
+  test("renders stable release changes from the exact changelog version", () => {
+    const notes = renderReleaseNotes({
+      version: "v0.1.7",
+      channel: "stable",
+      changelog: `# Changelog
+
+## [Unreleased]
+
+- Not released yet.
+
+## [0.1.7] - 2026-08-21
+
+### Added
+
+- Added Pi support.
+
+## [0.1.6] - 2026-08-20
+
+- Previous release.
+`
+    });
+
+    expect(notes).toContain("## What's changed\n\n### Added\n\n- Added Pi support.");
+    expect(notes).not.toContain("Not released yet");
+    expect(notes).not.toContain("Previous release");
+    expect(notes).toContain("## Install CLI");
+  });
+
+  test("rejects stable releases without matching non-empty changelog entries", () => {
+    expect(() => renderReleaseNotes({ version: "v0.1.7", channel: "stable" }))
+      .toThrow("Stable release v0.1.7 requires CHANGELOG.md");
+
+    expect(() => renderReleaseNotes({
+      version: "v0.1.7",
+      channel: "stable",
+      changelog: "## [0.1.6]\n\n- Previous release.\n"
+    })).toThrow("missing a ## [0.1.7] release entry");
+
+    expect(() => renderReleaseNotes({
+      version: "v0.1.7",
+      channel: "stable",
+      changelog: "## [0.1.7]\n\n## [0.1.6]\n\n- Previous release.\n"
+    })).toThrow("release entry ## [0.1.7] is empty");
+  });
+
+  test("renders test release notes without a stable changelog entry", () => {
+    const notes = renderReleaseNotes({ version: "v0.1.7-test.1", channel: "test" });
+
+    expect(notes).toContain("Test release for CLI dogfooding.");
+    expect(notes).not.toContain("## What's changed");
   });
 
   test("packages CLI tarball, checksums, manifest, and release notes", async () => {

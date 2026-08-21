@@ -4,8 +4,7 @@ import { finished } from "node:stream/promises";
 import { createGzip } from "node:zlib";
 import { copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-
-type ReleaseChannel = "stable" | "test";
+import { renderReleaseNotes, type ReleaseChannel } from "./release-notes";
 
 export type PackageReleaseOptions = {
   channel: ReleaseChannel;
@@ -96,6 +95,13 @@ export async function packageRelease(
   const runCommand = runtime.run ?? run;
   const packageJson = JSON.parse(await readFile(join(rootDir, "package.json"), "utf8")) as { version: string };
   const version = releaseVersion(packageJson.version, options, runtime.now);
+  const notes = renderReleaseNotes({
+    version,
+    channel: options.channel,
+    changelog: options.channel === "stable"
+      ? await readFile(join(rootDir, "CHANGELOG.md"), "utf8")
+      : undefined
+  });
   const releaseDir = join(artifactsRoot, version);
   const cliBuildDir = join(artifactsRoot, `${version}.cli`);
   const cliTargets = resolveCliTargets(options.cliTargets);
@@ -138,7 +144,7 @@ export async function packageRelease(
       `${JSON.stringify({ version, channel: options.channel, artifacts: manifest }, null, 2)}\n`
     );
     await copyFile(join(rootDir, "scripts", "install-linux.sh"), join(releaseDir, "install-linux.sh"));
-    await writeFile(join(releaseDir, "release-notes.md"), releaseNotes(version, options.channel));
+    await writeFile(join(releaseDir, "release-notes.md"), notes);
   } finally {
     await rm(cliBuildDir, { recursive: true, force: true });
   }
@@ -156,11 +162,6 @@ function run(command: string[], cwd: string): void {
 async function sha256(path: string): Promise<string> {
   const data = await readFile(path);
   return createHash("sha256").update(data).digest("hex");
-}
-
-function releaseNotes(version: string, channel: ReleaseChannel): string {
-  const qualifier = channel === "test" ? "Test release for CLI dogfooding." : "Release artifacts.";
-  return `# RecallBase ${version}\n\n${qualifier}\n\nInstall CLI:\n\n\`\`\`bash\nnpm install -g recallbase\n# Linux alternative pinned to this release:\ncurl -fsSL https://github.com/DarinRowe/RecallBase/releases/download/${version}/install-linux.sh | env RB_VERSION=${version} bash\n# Or download the platform tarball from this release and put rb on PATH.\n\`\`\`\n\nArtifacts:\n\n- Bun-compiled CLI tarball(s)\n- Linux installer with SHA-256 verification\n- SHA-256 checksum manifest\n\nNative host setup for the browser extension:\n\n\`\`\`bash\nrb extension install-host\nrb extension verify-host\n\`\`\`\n`;
 }
 
 export function resolveCliTargets(targets: CliTarget[]): CliTargetInfo[] {

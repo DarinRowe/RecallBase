@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- GitHub Release notes are now generated from the matching changelog version, and stable packaging fails when that entry is missing or empty.
+
 ## [0.1.7] - 2026-08-21
 
 ### Added
