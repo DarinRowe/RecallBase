@@ -8,6 +8,7 @@ import { importWithRegistry, type ImportKnownSourcesOptions, type SourceImporter
 import { createGrokBuildImporter } from "./grok-build/importer";
 import { createKimiCodeImporter } from "./kimi-code/importer";
 import { createOpenCodeImporter } from "./opencode/importer";
+import { createPiImporter } from "./pi/importer";
 
 export type {
   ImportKnownSourcesOptions,
@@ -22,6 +23,7 @@ export { createCopilotImporter } from "./copilot/importer";
 export { createGrokBuildImporter } from "./grok-build/importer";
 export { createKimiCodeImporter } from "./kimi-code/importer";
 export { createOpenCodeImporter } from "./opencode/importer";
+export { createPiImporter } from "./pi/importer";
 
 export function getDefaultImporters(): SourceImporter[] {
   return [
@@ -31,7 +33,8 @@ export function getDefaultImporters(): SourceImporter[] {
     createCopilotImporter(),
     createGrokBuildImporter(),
     createKimiCodeImporter(),
-    createOpenCodeImporter()
+    createOpenCodeImporter(),
+    createPiImporter()
   ];
 }
 

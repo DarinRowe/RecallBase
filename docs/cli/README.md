@@ -6,7 +6,7 @@ The local CLI imports, searches, opens, backs up, and exposes RecallBase data to
 
 - Entry point: `apps/cli/src/cli.ts`
 - Commands: `apps/cli/src/commands/*`
-- Local importers: Codex CLI and Codex in the ChatGPT desktop app, Claude Code, Claude Web exports, GitHub Copilot, Grok Build, Kimi Code, and OpenCode under `packages/importers/src/*`
+- Local importers: Codex CLI and Codex in the ChatGPT desktop app, Claude Code, Claude Web exports, GitHub Copilot, Grok Build, Kimi Code, OpenCode, and Pi under `packages/importers/src/*`
 - Native browser bridge: `apps/cli/src/commands/extension-host.ts`
 - Native host install/verify: `apps/cli/src/commands/extension-install.ts`
 - MCP server: `apps/cli/src/mcp/*`
@@ -46,3 +46,11 @@ The `kimi-code` source reads the documented main-agent session files under `$KIM
 It intentionally excludes private thinking, tool arguments and results, subagent streams, internal injections, system prompts, tool schemas, usage events, logs, tasks, and credentials. Those records are execution or diagnostic data rather than useful conversation history, and indexing them would add noise and increase privacy risk.
 
 Discovery reads only bounded schema prefixes. Import streams `wire.jsonl`, discards irrelevant records immediately, and yields one session per database batch so peak memory follows useful transcript size rather than total raw history size.
+
+## Pi Import Boundary
+
+The `pi` source reads Pi's documented versioned JSONL sessions under `~/.pi/agent/sessions/`. It follows Pi's official `$PI_CODING_AGENT_SESSION_DIR` and `$PI_CODING_AGENT_DIR` overrides and the global `settings.json` `sessionDir` value. Explicit `rb import --root` paths remain available for other custom layouts.
+
+Pi stores an append-only tree in each session file. RecallBase resolves the current branch from Pi's explicit `leaf` cursor when present, otherwise from the last structural entry, and imports its original user and assistant text, session name, timestamps, workspace, parent-session provenance, and model identifiers. Version 1 linear sessions remain supported with stable line-based message IDs; versions 2 and 3 use Pi's persistent tree IDs.
+
+Thinking blocks, tool calls and results, bash output, compaction and branch summaries, abandoned branches, and extension state/messages are excluded. Pi-generated `@file` wrappers and image bytes become `[file]` and `[image]` placeholders so local paths and attachment contents are not indexed. Imports stream one file at a time, retain only lightweight tree structure plus useful text, and tolerate an incomplete trailing record from an active Pi write. The unreleased lane-based v4 format is detected and reported as unsupported instead of being misread as v3.
