@@ -212,9 +212,9 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, gui
 Quick start:
 
 ```bash
-bun install
+bun install --frozen-lockfile
 bun run typecheck
-bun test
+bun run test
 ```
 
 See [docs/README.md](docs/README.md) for architecture notes, importer contracts, and fixture guidelines. If a compiled binary fails SQLite/FTS smoke checks, see [docs/release/platforms.md](docs/release/platforms.md).

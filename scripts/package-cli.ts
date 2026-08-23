@@ -35,6 +35,8 @@ const result = await Bun.build({
   target: "bun",
   compile: {
     outfile: options.outfile,
+    autoloadDotenv: false,
+    autoloadBunfig: false,
     ...(options.target ? { target: options.target } : {})
   }
 });
@@ -44,4 +46,20 @@ if (!result.success) {
   process.exit(1);
 }
 
+if (isMacTarget(options.target)) {
+  if (process.platform !== "darwin") {
+    throw new Error("macOS CLI artifacts must be packaged on macOS so their ad-hoc signature can be validated.");
+  }
+
+  const sign = Bun.spawnSync(["codesign", "--force", "--sign", "-", options.outfile], {
+    stdout: "inherit",
+    stderr: "inherit"
+  });
+  if (!sign.success) throw new Error(`Failed to ad-hoc sign ${options.outfile}.`);
+}
+
 console.log(options.outfile);
+
+function isMacTarget(target?: string): boolean {
+  return target ? target.startsWith("bun-darwin-") : process.platform === "darwin";
+}
