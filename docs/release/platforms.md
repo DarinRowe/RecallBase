@@ -11,6 +11,10 @@ Each GitHub Release includes `install-linux.sh` and platform tarballs named `rec
 
 The release script packages Bun-compiled CLI targets. npm uses the Codex CLI pattern: `recallbase@<version>` is a Node 18+ command shim, and platform binaries are published as platform-suffixed versions of the same `recallbase` package. The shim references those versions through npm alias optional dependencies such as `recallbase-darwin-arm64: npm:recallbase@<version>-darwin-arm64`; the platform binary embeds Bun, so npm users do not need a separate Bun installation.
 
+macOS CLI artifacts must be built on macOS. The packaging script applies a fresh ad-hoc signature after Bun compilation, and the packaging smoke test verifies that signature before release artifacts are accepted.
+
+Compiled CLI artifacts disable Bun's runtime `.env` and `bunfig.toml` auto-loading. Running `rb` inside another project must not let that project's configuration redirect RecallBase storage or change runtime behavior; explicit process environment variables remain supported.
+
 All npm artifacts copy the repository root `README.md` into the package root. Keep package documentation in that single source; npm displays the copied README after the next version is published.
 
 ## Required Smoke Checks
@@ -18,9 +22,9 @@ All npm artifacts copy the repository root `README.md` into the package root. Ke
 Before publishing a binary target:
 
 ```bash
-bun install
+bun install --frozen-lockfile
 bun run typecheck
-bun test tests/packaging
+bun run test:packaging
 bun run package:release:test
 bun run scripts/package-npm.ts --targets=host
 bash -n scripts/install-linux.sh
@@ -48,7 +52,7 @@ rb backup --out recallbase-backup.json --json
 
 ## Supported Targets
 
-- Development target: current macOS arm64 with Bun `1.3.14`.
+- Development target: current macOS arm64 with Bun `1.4.0`.
 - Release smoke targets: Linux latest, macOS latest, and Windows latest.
 - Native-host CI targets: real compiled host installs on macOS latest, Windows latest, and Linux latest, plus POSIX source-host execution with a GUI-safe `PATH`.
 - GitHub Release and npm publishing are gated on executing each exact packaged native-host binary and the user-facing npm shim on Linux x64/arm64, macOS Intel/Apple Silicon, and Windows x64 runners.
@@ -56,7 +60,7 @@ rb backup --out recallbase-backup.json --json
 - npm targets: one package, `recallbase`, with the public version plus platform versions such as `X.Y.Z-darwin-arm64`, `X.Y.Z-linux-x64`, and `X.Y.Z-win32-x64`.
 - Native-host install targets: Chrome, Chromium, Microsoft Edge, and Firefox per-user locations on macOS/Linux/Windows; Chrome for Testing per-user locations on macOS/Linux; safely auto-discovered Chromium profile directories on macOS/Linux; standard plus already-established browser-specific Windows HKCU registrations with compiled `rb.exe`; and persistent explicit user-data/registry targets for every Chromium fork whose product-specific location cannot be inferred safely.
 - Linux prebuilt targets require glibc. musl/Alpine users must currently run the package source with Bun; do not route them to the glibc binary.
-- Source fallback target: any platform that can run Bun 1.3.14 and satisfy the SQLite/FTS requirement.
+- Source fallback target: any platform that can run Bun 1.4.0 and satisfy the SQLite/FTS requirement.
 
 ## Publishing Notes
 

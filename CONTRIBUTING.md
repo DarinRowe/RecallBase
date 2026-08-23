@@ -5,9 +5,9 @@ Thanks for your interest in contributing.
 ## Getting Started
 
 ```bash
-bun install
+bun install --frozen-lockfile
 bun run typecheck
-bun test
+bun run test
 ```
 
 See [docs/README.md](docs/README.md) for architecture notes, importer contracts, and fixture guidelines.
@@ -32,7 +32,7 @@ See [docs/README.md](docs/README.md) for architecture notes, importer contracts,
 ## Testing
 
 ```bash
-bun test
+bun run test
 bun run package:release:test
 ```
 
