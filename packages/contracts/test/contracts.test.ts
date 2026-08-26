@@ -185,6 +185,7 @@ describe("browser site contract", () => {
     expect(browserHostPermissionPatterns()).toContain("https://claude.ai/api/organizations/*/files/*");
     expect(browserHostPermissionPatterns()).toContain("https://copilot.microsoft.com/images/*");
     expect(browserHostPermissionPatterns()).toContain("https://lh3.googleusercontent.com/*");
+    expect(browserHostPermissionPatterns()).toContain("https://lh3.google.com/rd-gg/*");
     expect(browserHostPermissionPatterns()).toContain("https://chat.qwen.ai/*");
     expect(browserHostPermissionPatterns()).toContain("https://workspace-zb-cdn.qianwen.com/*");
     expect(browserHostPermissionPatterns()).toContain("https://cdn.qwenlm.ai/*");
@@ -195,6 +196,7 @@ describe("browser site contract", () => {
     expect(browserContentScriptMatches()).not.toContain("https://claude.ai/api/organizations/*/files/*");
     expect(browserContentScriptMatches()).not.toContain("https://copilot.microsoft.com/images/*");
     expect(browserContentScriptMatches()).not.toContain("https://lh3.googleusercontent.com/*");
+    expect(browserContentScriptMatches()).not.toContain("https://lh3.google.com/rd-gg/*");
     expect(browserHostPermissionPatterns()).not.toContain("<all_urls>");
     expect(browserContentScriptMatches()).not.toContain("<all_urls>");
   });
