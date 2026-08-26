@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Native browser imports now accept both regional and global Qwen conversations and stay aligned with the extension's current generated-image site contracts.
 - Native browser-site contracts now include Gemini's exact `lh3.google.com` Alternate Link relay used for local generated-image caching.
+- Native browser-site contracts now include Microsoft Copilot's current `/th/id/*` generated-image path.
 
 ### Security
 

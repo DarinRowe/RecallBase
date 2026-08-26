@@ -77,7 +77,7 @@ export const browserSites = [
     contentScriptMatches: ["https://github.com/copilot*"]
   }),
   site("microsoft-copilot", "Microsoft Copilot", ["copilot.microsoft.com"], /^\/($|chats?\/[^/]+|threads?\/[^/]+)/, {
-    assetHostPermissionPatterns: ["https://copilot.microsoft.com/images/*"]
+    assetHostPermissionPatterns: ["https://copilot.microsoft.com/images/*", "https://copilot.microsoft.com/th/id/*"]
   })
 ] as const satisfies readonly BrowserSiteContract[];
 
