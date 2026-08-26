@@ -206,7 +206,8 @@ describe("extension native host", () => {
       ["notebooklm", "NotebookLM", "https://notebooklm.google.com/notebook/abc123"],
       ["google-ai-studio", "Google AI Studio", "https://aistudio.google.com/app/prompts/new_chat"],
       ["github-copilot", "GitHub Copilot", "https://github.com/copilot"],
-      ["microsoft-copilot", "Microsoft Copilot", "https://copilot.microsoft.com/chats/abc123"]
+      ["microsoft-copilot", "Microsoft Copilot", "https://copilot.microsoft.com/chats/abc123"],
+      ["qianwen", "Qwen", "https://chat.qwen.ai/c/369280c9-2fe8-4b8f-8d26-c66156cc5a46"]
     ] as const;
 
     for (const [site, label, url] of supported) {

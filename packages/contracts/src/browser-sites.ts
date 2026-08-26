@@ -23,10 +23,18 @@ export interface BrowserSiteCaptureReference {
 export const browserSites = [
   site("chatgpt", "ChatGPT", ["chatgpt.com", "chat.openai.com"], /^\/(c|share|g|gg)\//, {
     adapterKind: "custom",
-    assetHostPermissionPatterns: ["https://*.oaiusercontent.com/*", "https://oaidalleapiprodscus.blob.core.windows.net/*"]
+    assetHostPermissionPatterns: [
+      "https://*.oaiusercontent.com/*",
+      "https://oaidalleapiprodscus.blob.core.windows.net/*",
+      "https://chatgpt.com/backend-api/files/*",
+      "https://chatgpt.com/backend-api/estuary/*"
+    ],
+    contentScriptMatches: ["https://chatgpt.com/*", "https://chat.openai.com/*"]
   }),
-  site("claude", "Claude", ["claude.ai"], /^\/chat\/.+/, {
-    assetHostPermissionPatterns: ["https://claude.ai/api/organizations/*/files/*"]
+  site("claude", "Claude", ["claude.ai"], /^\/(?:chat\/.+|cowork\/cse_[A-Za-z0-9]+|code\/session_[A-Za-z0-9]+)\/?$/, {
+    hostPermissionPatterns: ["https://claude.ai/*", "https://*.claudemcpcontent.com/*"],
+    assetHostPermissionPatterns: ["https://claude.ai/api/organizations/*/files/*", "https://assets.claude.ai/*"],
+    contentScriptMatches: ["https://claude.ai/*"]
   }),
   site("gemini", "Gemini", ["gemini.google.com"], /^\/(.+\/)?(app\/.+|gem\/.+\/.+)/, {
     assetHostPermissionPatterns: ["https://lh3.googleusercontent.com/*"]
@@ -36,30 +44,34 @@ export const browserSites = [
     hostPermissionPatterns: ["https://kimi.moonshot.cn/*", "https://kimi.com/*", "https://www.kimi.com/*"],
     contentScriptMatches: ["https://kimi.moonshot.cn/*", "https://kimi.com/*", "https://www.kimi.com/*"]
   }),
-  site("qianwen", "Qwen", ["qianwen.com"], /^\/chat\/[a-f0-9]+$/, {
-    docsName: "Qwen",
-    hostPermissionPatterns: ["https://qianwen.com/*", "https://www.qianwen.com/*"],
-    contentScriptMatches: ["https://qianwen.com/*", "https://www.qianwen.com/*"]
+  site("qianwen", "Qwen", ["qianwen.com", "qwen.ai"], /^\/(?:chat\/[a-f0-9]+|c\/[a-f0-9-]+)$/, {
+    docsName: "Qwen / 千问",
+    hostPermissionPatterns: ["https://qianwen.com/*", "https://www.qianwen.com/*", "https://chat.qwen.ai/*"],
+    assetHostPermissionPatterns: ["https://workspace-zb-cdn.qianwen.com/*", "https://cdn.qwenlm.ai/*"],
+    contentScriptMatches: ["https://qianwen.com/*", "https://www.qianwen.com/*", "https://chat.qwen.ai/*"]
   }),
   site("doubao", "Doubao", ["doubao.com"], /^\/chat\/(?!local)[^/]+/, {
-    docsName: "Doubao",
-    hostPermissionPatterns: ["https://www.doubao.com/*"],
-    contentScriptMatches: ["https://www.doubao.com/*"]
+    docsName: "Doubao / 豆包",
+    hostPermissionPatterns: ["https://doubao.com/*", "https://www.doubao.com/*"],
+    assetHostPermissionPatterns: ["https://p3-flow-imagex-sign.byteimg.com/*", "https://p11-flow-imagex-sign.byteimg.com/*"],
+    contentScriptMatches: ["https://doubao.com/*", "https://www.doubao.com/*"]
   }),
   site("yuanbao", "Tencent Yuanbao", ["yuanbao.tencent.com"], /^\/chat\/[^/]+\/[^/]+$/, {
-    docsName: "Tencent Yuanbao"
+    docsName: "Tencent Yuanbao / 腾讯元宝"
   }),
-  site("grok", "Grok", ["grok.com"], /^(\/(chat|c)\/[^/]+|\/)$/, {
+  site("grok", "Grok", ["grok.com"], /^(\/(chat|c)\/[^/]+|\/|\/imagine(?:\/post\/[^/]+)?\/?)$/, {
     assetHostPermissionPatterns: ["https://assets.grok.com/*"]
   }),
   site("perplexity", "Perplexity", ["perplexity.ai"], /^\/(search\/[^/]+|spaces\/[^/]+\/search\/[^/]+)/, {
     adapterKind: "custom",
-    assetHostPermissionPatterns: ["https://pplx-res.cloudinary.com/*", "https://assets.perplexity.ai/*"],
+    assetHostPermissionPatterns: ["https://pplx-res.cloudinary.com/*", "https://assets.perplexity.ai/*", "https://user-gen-media-assets.s3.us-east-1.amazonaws.com/*"],
     hostPermissionPatterns: ["https://perplexity.ai/*", "https://www.perplexity.ai/*"],
     contentScriptMatches: ["https://perplexity.ai/*", "https://www.perplexity.ai/*"]
   }),
   site("notebooklm", "NotebookLM", ["notebooklm.google.com"], /^\/notebook\/[^/]+/),
-  site("google-ai-studio", "Google AI Studio", ["aistudio.google.com"], /^\/(app\/)?(u\/\d+\/)?prompts\/[^/]+/),
+  site("google-ai-studio", "Google AI Studio", ["aistudio.google.com"], /^\/(app\/)?(u\/\d+\/)?prompts\/[^/]+/, {
+    assetHostPermissionPatterns: ["https://lh3.googleusercontent.com/*"]
+  }),
   site("github-copilot", "GitHub Copilot", ["github.com"], /^\/copilot(?:\/.*)?$/, {
     hostPermissionPatterns: ["https://github.com/*"],
     contentScriptMatches: ["https://github.com/copilot*"]
