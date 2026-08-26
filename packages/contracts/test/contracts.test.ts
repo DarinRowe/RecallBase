@@ -185,6 +185,10 @@ describe("browser site contract", () => {
     expect(browserHostPermissionPatterns()).toContain("https://claude.ai/api/organizations/*/files/*");
     expect(browserHostPermissionPatterns()).toContain("https://copilot.microsoft.com/images/*");
     expect(browserHostPermissionPatterns()).toContain("https://lh3.googleusercontent.com/*");
+    expect(browserHostPermissionPatterns()).toContain("https://chat.qwen.ai/*");
+    expect(browserHostPermissionPatterns()).toContain("https://workspace-zb-cdn.qianwen.com/*");
+    expect(browserHostPermissionPatterns()).toContain("https://cdn.qwenlm.ai/*");
+    expect(browserHostPermissionPatterns()).toContain("https://p3-flow-imagex-sign.byteimg.com/*");
     expect(browserContentScriptMatches()).toContain("https://github.com/copilot*");
     expect(browserContentScriptMatches()).not.toContain("https://*.oaiusercontent.com/*");
     expect(browserContentScriptMatches()).not.toContain("https://oaidalleapiprodscus.blob.core.windows.net/*");
@@ -226,5 +230,19 @@ describe("browser site contract", () => {
       sourceLabel: "ChatGPT",
       url: "https://chatgpt.com/gg/conversation-1"
     })?.id).toBe("chatgpt");
+  });
+
+  test("accepts both regional and global Qwen capture URLs", () => {
+    for (const url of [
+      "https://www.qianwen.com/chat/4bc5ff1666094240ab18fac4e9ff8dbb",
+      "https://chat.qwen.ai/c/369280c9-2fe8-4b8f-8d26-c66156cc5a46"
+    ]) {
+      expect(findBrowserSiteForCapture({
+        site: "qianwen",
+        sourceId: "browser-extension-qianwen",
+        sourceLabel: "Qwen",
+        url
+      })?.id).toBe("qianwen");
+    }
   });
 });

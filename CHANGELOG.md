@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pull requests now require an explicit release-note decision, and one release preparation command moves all accumulated changes while synchronizing version metadata.
 - Development, CI, and release packaging now use Bun 1.4.0, including parallel full-suite tests, frozen lockfile installs, and validated ad-hoc signing for macOS executables.
 
+### Fixed
+
+- Native browser imports now accept both regional and global Qwen conversations and stay aligned with the extension's current generated-image site contracts.
+
 ### Security
 
 - Compiled CLI artifacts now ignore project-local `.env` and `bunfig.toml` files so untrusted working directories cannot redirect RecallBase storage or alter runtime behavior.
