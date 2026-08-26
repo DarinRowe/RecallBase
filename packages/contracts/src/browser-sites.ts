@@ -37,7 +37,7 @@ export const browserSites = [
     contentScriptMatches: ["https://claude.ai/*"]
   }),
   site("gemini", "Gemini", ["gemini.google.com"], /^\/(.+\/)?(app\/.+|gem\/.+\/.+)/, {
-    assetHostPermissionPatterns: ["https://lh3.googleusercontent.com/*"]
+    assetHostPermissionPatterns: ["https://lh3.googleusercontent.com/*", "https://lh3.google.com/rd-gg/*"]
   }),
   site("deepseek", "DeepSeek", ["chat.deepseek.com"], /^\/a\/chat\/s\/[^/]+$/),
   site("kimi", "Kimi", ["kimi.com", "moonshot.cn"], /^\/chat\/[^/]+/, {
