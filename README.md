@@ -5,6 +5,7 @@
 [![npm](https://img.shields.io/npm/v/recallbase)](https://www.npmjs.com/package/recallbase)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/ai-chat-exporter-archive/fapgpimjelmfedlapidmfljcpmenmjeb)
 [![Microsoft Edge Add-ons](https://img.shields.io/badge/Edge-Add--ons-0078D7?logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/ai-chat-exporter-archiv/gnlcemcmimkbgmnlclipknjjghllfdac)
+[![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--ons-FF7139?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/recallbase/)
 [![CI](https://img.shields.io/github/actions/workflow/status/DarinRowe/RecallBase/ci.yml?label=CI)](https://github.com/DarinRowe/RecallBase/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![macOS · Linux · Windows](https://img.shields.io/badge/platform-macOS%20·%20Linux%20·%20Windows-blue)](https://recallbase.net/docs/install-cli/)
@@ -188,6 +189,8 @@ RecallBase is **local-first by design**:
 ---
 
 ## Optional: Archive Web AI Chats
+
+Available on Chrome, Edge, and [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/recallbase/).
 
 [Install the browser extension →](https://recallbase.net/docs/install-browser-extension/)
 

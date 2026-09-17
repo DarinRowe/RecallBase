@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Added the published Firefox Add-ons listing to browser extension installation links.
 - Pull requests now require an explicit release-note decision, and one release preparation command moves all accumulated changes while synchronizing version metadata.
 - Development, CI, and release packaging now use Bun 1.4.0, including parallel full-suite tests, frozen lockfile installs, and validated ad-hoc signing for macOS executables.
 
